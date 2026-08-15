@@ -1,0 +1,154 @@
+<! DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>إنشاء حساب جديد - منصة سيد العربي</title>
+    <!-- استدعاء مكاتب فايربيز -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px 15px; }
+        
+        .signup-card { background-color: #ffffff; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); width: 100%; max-width: 420px; border: 1px solid #f0f2f5; }
+        
+        .signup-card h2 { color: #2c5957; font-size: 1.6rem; margin-bottom: 5px; font-weight: bold; text-align: center; }
+        .signup-card .subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 30px; text-align: center; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #334155; font-size: 0.95rem; }
+        .form-group input, .form-group select { width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; transition: 0.3s; background-color: #ffffff; color: #333; }
+        .form-group select { appearance: none; background-image: url('data:image/svg+xml;utf8,<svg fill="black" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>'); background-repeat: no-repeat; background-position-x: 10px; background-position-y: 50%; }
+        .form-group input:focus, .form-group select:focus { border-color: #f39c12; }
+
+        .btn-main { width: 100%; padding: 14px; background: #f39c12; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.2); }
+        .btn-main:hover { background: #e67e22; transform: translateY(-2px); }
+        .btn-main:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
+
+        .spinner { display: none; width: 18px; height: 18px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .login-link { margin-top: 25px; font-size: 0.95rem; color: #64748b; text-align: center; }
+        .login-link a { color: #2c5957; font-weight: bold; text-decoration: none; transition: 0.2s; }
+        .login-link a:hover { text-decoration: underline; }
+
+        @media (max-width: 480px) {
+            .signup-card { padding: 30px 20px; }
+            .signup-card h2 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="signup-card">
+        <h2>إنشاء حساب جديد</h2>
+        <p class="subtitle">انضم الآن لمنصة سيد العربي وابدأ رحلة التحدي والتميز 🚀</p>
+
+        <form onsubmit="handleSignup(event)">
+            <div class="form-group">
+                <label>اسم الطالب بالكامل</label>
+                <input type="text" id="name" placeholder="ادخل اسمك الثلاثي أو الرباعي" required>
+            </div>
+            
+            <div class="form-group">
+                <label>رقم هاتف الطالب (الاسم المستخدم للدخول)</label>
+                <input type="tel" id="phone" placeholder="ادخل رقم موبايلك" required>
+            </div>
+
+            <div class="form-group">
+                <label>رقم هاتف ولي الأمر</label>
+                <input type="tel" id="parentPhone" placeholder="ادخل رقم موبايل ولي أمرك للمتابعة" required>
+            </div>
+
+            <div class="form-group">
+                <label>المرحلة الدراسية</label>
+                <select id="stage" required>
+                    <option value="" disabled selected>اختر صفك الدراسي</option>
+                    <option value="fourth-primary">الصف الرابع الابتدائي</option>
+                    <option value="fifth-primary">الصف الخامس الابتدائي</option>
+                    <option value="sixth-primary">الصف السادس الابتدائي</option>
+                    <option value="first-prep">الصف الأول الإعدادي</option>
+                    <option value="second-prep">الصف الثاني الإعدادي</option>
+                    <option value="third-prep">الصف الثالث الإعدادي</option>
+                    <option value="first-sec">الصف الأول الثانوي</option>
+                    <option value="second-sec">الصف الثاني الثانوي</option>
+                    <option value="third-sec">الصف الثالث الثانوي</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>كلمة السر</label>
+                <input type="password" id="pass" placeholder="اختر كلمة سر قوية" required>
+            </div>
+
+            <!-- الإضافة الجديدة: خانة تأكيد كلمة المرور بنفس التنسيق -->
+            <div class="form-group">
+                <label>تأكيد كلمة السر</label>
+                <input type="password" id="confirmPass" placeholder="أعد إدخال كلمة السر للتأكيد" required>
+            </div>
+            
+            <button type="submit" class="btn-main" id="submitBtn">
+                <div class="spinner" id="spinner"></div>
+                <span>تسجيل حساب جديد</span>
+            </button>
+        </form>
+
+        <div class="login-link">
+            لديك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function handleSignup(event) {
+            event.preventDefault();
+            
+            const pass = document.getElementById('pass').value;
+            const confirmPass = document.getElementById('confirmPass').value;
+
+            // كود التأكد من تطابق كلمة المرور كما طلبت
+            if(pass !== confirmPass) {
+                alert("كلمة المرور غير متطابقة");
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('spinner');
+            btn.disabled = true;
+            spinner.style.display = "inline-block";
+            btn.querySelector('span').innerText = "جاري التسجيل...";
+
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const parentPhone = document.getElementById('parentPhone').value.trim();
+            const stage = document.getElementById('stage').value;
+            
+            const code = "SA-" + Math.floor(1000 + Math.random() * 9000);
+
+            database.ref('students/' + code).set({
+                name: name,
+                phone: phone,
+                parentPhone: parentPhone,
+                stage: stage,
+                password: pass,
+                code: code,
+                subscriptionStatus: 'inactive',
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                alert("تم إنشاء حسابك بنجاح! \n كود الدخول الخاص بك هو: " + code + "\n يرجى الاحتفاظ به.");
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                alert("حدث خطأ أثناء التسجيل: " + error.message);
+                btn.disabled = false;
+                spinner.style.display = "none";
+                btn.querySelector('span').innerText = "تسجيل حساب جديد";
+            });
+        }
+    </script>
+</body>
+</html>

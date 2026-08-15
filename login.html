@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تسجيل الدخول - منصة سيد العربي</title>
+    <!-- استدعاء الأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- مكتبة قراءة الـ QR -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- مكاتب فايربيز -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px 15px; }
+        
+        .login-card { background-color: #ffffff; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); width: 100%; max-width: 420px; text-align: center; border: 1px solid #f0f2f5; }
+        
+        .login-card h2 { color: #1c2b46; font-size: 1.8rem; margin-bottom: 5px; font-weight: bold; }
+        .login-card .subtitle { color: #94a3b8; font-size: 0.95rem; margin-bottom: 30px; }
+
+        .form-group { margin-bottom: 15px; position: relative; }
+        .form-group input { width: 100%; padding: 14px 15px 14px 40px; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 0.95rem; outline: none; transition: 0.3s; background-color: #ffffff; color: #333; }
+        .form-group input:focus { border-color: #f39c12; box-shadow: 0 0 0 3px rgba(243, 156, 18, 0.1); }
+        .form-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 1rem; }
+
+        .btn-main { width: 100%; padding: 14px; background: #f39c12; color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(243, 156, 18, 0.2); }
+        .btn-main:hover { background: #e67e22; transform: translateY(-2px); }
+
+        .divider { display: flex; align-items: center; text-align: center; color: #cbd5e1; margin: 25px 0; font-size: 0.9rem; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #f1f5f9; }
+        .divider:not(:empty)::before { margin-left: 15px; }
+        .divider:not(:empty)::after { margin-right: 15px; }
+
+        .btn-extra { width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-bottom: 12px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-extra:hover { transform: translateY(-2px); }
+        
+        .btn-qr { background-color: #1e293b; color: white; }
+        .btn-forgot { background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+        .btn-support { background-color: #22c55e; color: white; }
+        .btn-register { background-color: #f39c12; color: white; margin-bottom: 0; }
+
+        .spinner { display: none; width: 18px; height: 18px; border: 2px solid #fff; border-radius: 50%; border-top-color: transparent; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* نافذة قراءة كود الـ QR */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s ease; z-index: 1000; padding: 15px; }
+        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 380px; text-align: center; transform: scale(0.7); transition: 0.3s ease; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        #qr-reader { width: 100% !important; border: 2px dashed #1e293b !important; border-radius: 10px; margin-bottom: 15px; }
+
+        @media (max-width: 480px) {
+            .login-card { padding: 30px 20px; }
+            .login-card h2 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>تسجيل الدخول</h2>
+        <p class="subtitle">أدخل بياناتك للمتابعة</p>
+
+        <form onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="username" placeholder="أدخل رقم الهاتف أو الكود" required>
+            </div>
+            <div class="form-group">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
+            </div>
+            
+            <button type="submit" class="btn-main" id="submitBtn">
+                <div class="spinner" id="spinner"></div>
+                <span>تسجيل الدخول</span>
+            </button>
+        </form>
+
+        <div class="divider">أو</div>
+
+        <button class="btn-extra btn-qr" onclick="openQrScanner()">
+            <i class="fa-solid fa-qrcode"></i> تسجيل الدخول بالكود (كاميرا / ملف)
+        </button>
+        
+        <button class="btn-extra btn-forgot" onclick="alert('يرجى التواصل مع الدعم الفني لاستعادة كلمة المرور.')">
+            <i class="fa-solid fa-key"></i> نسيت كلمة المرور؟
+        </button>
+        
+        <button class="btn-extra btn-support" onclick="window.open('https://wa.me/201000000000', '_blank')">
+            <i class="fa-brands fa-whatsapp"></i> الدعم الفني
+        </button>
+        
+        <button class="btn-extra btn-register" onclick="window.location.href='signup.html'">
+            <i class="fa-solid fa-user-plus"></i> إنشاء حساب جديد
+        </button>
+    </div>
+
+    <div class="modal-overlay" id="qrModal">
+        <div class="modal-box">
+            <h3 style="color: #1c2b46; margin-bottom: 15px;">مسح الكود</h3>
+            <div id="qr-reader"></div>
+            <button class="btn-extra btn-forgot" onclick="closeQrScanner()" style="margin-top: 10px; margin-bottom: 0;">إلغاء</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 🔒 توليد بصمة فريدة للجهاز إذا لم تكن موجودة
+        let localDeviceID = localStorage.getItem('myDeviceID');
+        if (!localDeviceID) {
+            localDeviceID = 'DEV-' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('myDeviceID', localDeviceID);
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('spinner');
+            btn.disabled = true;
+            spinner.style.display = "inline-block";
+
+            const u = document.getElementById('username').value.trim().toUpperCase();
+            const p = document.getElementById('password').value.trim();
+
+            const loginProcess = (snapshot) => {
+                let data = null, code = '';
+                if(snapshot.hasChildren()) { 
+                    snapshot.forEach(c => { data = c.val(); code = c.key; }); 
+                } else { 
+                    data = snapshot.val(); code = u; 
+                }
+
+                if (data && data.password === p) {
+                    
+                    // 🚨 التحقق من ارتباط الجهاز (القبضة الحديدية)
+                    if (data.deviceID && data.deviceID !== localDeviceID) {
+                        alert("عفواً! هذا الحساب مرتبط بجهاز آخر بالفعل.\nإذا قمت بتغيير هاتفك، يرجى التواصل مع المستر لفك الارتباط.");
+                        btn.disabled = false;
+                        spinner.style.display = "none";
+                        return; // وقف الدخول فوراً
+                    }
+
+                    // إذا كان الحساب غير مرتبط بجهاز، قم بربطه الآن
+                    if (!data.deviceID) {
+                        database.ref('students/' + code).update({ deviceID: localDeviceID });
+                    }
+                    
+                    localStorage.setItem('savedCode', code);
+                    localStorage.setItem('savedName', data.name);
+                    localStorage.setItem('studentStage', data.stage);
+
+                    window.location.href = 'dashboard.html';
+                } else {
+                    alert("عفواً.. بيانات الدخول غير صحيحة!");
+                    btn.disabled = false;
+                    spinner.style.display = "none";
+                }
+            };
+
+            if(u.startsWith("SA-")) {
+                database.ref('students/' + u).once('value').then(loginProcess);
+            } else {
+                database.ref('students').orderByChild('phone').equalTo(u).once('value').then(loginProcess);
+            }
+        }
+
+        let html5QrcodeScanner;
+        function openQrScanner() {
+            document.getElementById('qrModal').classList.add('active');
+            html5QrcodeScanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+            html5QrcodeScanner.render((text) => {
+                document.getElementById('username').value = text;
+                closeQrScanner();
+            });
+        }
+        function closeQrScanner() { 
+            document.getElementById('qrModal').classList.remove('active');
+            if(html5QrcodeScanner) { html5QrcodeScanner.clear(); }
+        }
+    </script>
+</body>
+</html>

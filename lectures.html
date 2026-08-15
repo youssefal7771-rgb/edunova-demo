@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>المحاضرات والامتحانات - منصة سيد العربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f3f5f9; color: #333; min-height: 100vh; padding: 30px 20px; overflow-x: hidden;}
+        .container { max-width: 1000px; margin: 0 auto; width: 100%; }
+        
+        .header-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; padding: 15px 25px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.01); }
+        .header-section h1 { color: #5c59ca; font-size: 1.4rem; }
+        .btn-back { background: #5c59ca; color: white; text-decoration: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 0.9rem; transition: 0.3s; white-space: nowrap; }
+        .btn-back:hover { background: #4a47b5; }
+
+        .status-banner { background: #fef2f2; color: #ef4444; border: 1px solid #fca5a5; padding: 12px; border-radius: 12px; text-align: center; margin-bottom: 25px; font-weight: bold; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .status-banner.active { background: #e6fffa; color: #0d9488; border-color: #99f6e4; }
+        .status-banner a { background: #ef4444; color: white; text-decoration: none; padding: 5px 15px; border-radius: 8px; font-size: 0.85rem; margin-right: 10px; transition: 0.2s; box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3); }
+        .status-banner a:hover { background: #dc2626; transform: translateY(-1px); }
+
+        .lesson-main-card { background: white; border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.02); padding: 0; margin-bottom: 25px; overflow: hidden; position: relative; border: 1px solid #eaedf3; }
+        .lesson-header-bar { background-color: #f1f8fc; padding: 25px 35px; display: flex; justify-content: space-between; align-items: center; }
+        .lesson-badge { background-color: #655ecc; color: white; padding: 4px 14px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; width: fit-content; }
+        .lesson-title { font-size: 1.4rem; color: #2b303a; font-weight: bold; margin-top: 5px; }
+        .lesson-poster-area { padding: 40px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #7a828e; font-size: 0.95rem; gap: 10px; }
+        .lesson-poster-area i { font-size: 1.4rem; }
+
+        .toggle-btn-container { display: flex; justify-content: flex-end; padding: 0 30px 20px 30px; }
+        .btn-toggle-content { background-color: #655ecc; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(101, 94, 204, 0.2); transition: 0.3s; }
+        .btn-toggle-content:hover { background-color: #5149b5; }
+
+        .collapsible-content { max-height: 5000px; overflow: hidden; transition: max-height 0.5s cubic-bezier(0, 1, 0, 1); }
+        .collapsible-content.hidden { max-height: 0 !important; }
+
+        .video-section-box { background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.01); padding: 30px; margin-bottom: 25px; border: 1px solid #eaedf3; }
+        .section-title-row { display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 1.3rem; font-weight: bold; color: #2b303a; border-bottom: 1px solid #f0f2f7; padding-bottom: 15px; margin-bottom: 25px; }
+        .icon-wrapper-purple { background-color: #655ecc; color: white; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .video-item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .video-meta-right { display: flex; align-items: center; gap: 15px; font-size: 1.1rem; color: #2b303a; font-weight: 600; text-align: right; }
+        .icon-play-small { color: #655ecc; font-size: 1.8rem; }
+        
+        .btn-watch-green { background-color: #0c8554; color: white; text-decoration: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; white-space: nowrap; border: none; }
+        .btn-watch-green:hover { background-color: #096640; }
+        .btn-locked-red { background-color: #ef4444; color: white; text-decoration: none; padding: 10px 24px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; white-space: nowrap; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2); border: none; }
+        .btn-locked-red:hover { background-color: #dc2626; }
+
+        .video-player-container { display: none; position: relative; width: 100%; background: #000; border-radius: 15px; overflow: hidden; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .video-player-container video { width: 100%; max-height: 500px; display: block; outline: none; }
+        .vid-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-25deg); color: rgba(255, 255, 255, 0.25); font-size: 3vw; font-weight: 900; pointer-events: none; white-space: nowrap; user-select: none; z-index: 10; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+
+        .bottom-tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; }
+        .tool-card-box { background: white; border-radius: 20px; border: 1px solid #eaedf3; box-shadow: 0 4px 15px rgba(0,0,0,0.01); padding: 25px; display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; }
+        .tool-card-box::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; background-color: #655ecc; border-radius: 20px 20px 0 0; }
+        .tool-icon-center { background-color: #655ecc; color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 15px; }
+        .tool-card-box h3 { font-size: 1.15rem; color: #2b303a; margin-bottom: 8px; }
+        .tool-status-text { color: #a0a7b5; font-size: 0.9rem; margin-bottom: 20px; }
+        .btn-tool-status { width: 100%; background-color: #f6f8fb; color: #a0a7b5; border: 1px solid #e2e7ee; padding: 12px; border-radius: 10px; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; text-decoration: none; transition: 0.3s; }
+        .btn-tool-status.available { background-color: #655ecc; color: white; border-color: #655ecc; }
+        .btn-tool-status.available:hover { background-color: #5149b5; }
+        .btn-tool-status.locked { background-color: #fef2f2; color: #ef4444; border-color: #fca5a5; }
+
+        .no-data-msg { text-align: center; padding: 50px; background: white; border-radius: 24px; margin-top: 20px; }
+        .no-data-msg i { font-size: 3.5rem; color: #cbd5e1; margin-bottom: 20px; }
+        .no-data-msg h3 { color: #2b303a; font-size: 1.3rem; margin-bottom: 10px; }
+        .no-data-msg p { color: #7a828e; font-size: 1rem; line-height: 1.5; }
+        
+        @media (max-width: 768px) {
+            body { padding: 15px 10px; }
+            .header-section { flex-direction: column; gap: 15px; text-align: center; padding: 15px; }
+            .lesson-header-bar { flex-direction: column; align-items: flex-start; gap: 10px; padding: 15px 20px; }
+            .video-section-box { padding: 20px 15px; }
+            .video-item-row { flex-direction: column-reverse; gap: 15px; align-items: stretch; }
+            .btn-watch-green, .btn-locked-red { justify-content: center; }
+            .video-meta-right { justify-content: flex-end; }
+            .bottom-tools-grid { grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+            .toggle-btn-container { padding: 0 15px 15px 15px; }
+            .btn-toggle-content { width: 100%; justify-content: center; }
+            .status-banner { flex-direction: column; }
+            .status-banner a { margin-right: 0; margin-top: 5px; width: 100%; text-align: center; }
+            .vid-watermark { font-size: 5vw; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <h1>📚 المحاضرات المتاحة</h1>
+            <a href="dashboard.html" class="btn-back">لوحة التحكم ←</a>
+        </div>
+
+        <div id="sub-status-banner" class="status-banner">
+            <i class="fa-solid fa-spinner fa-spin"></i> جاري التحقق من حالة الاشتراك...
+        </div>
+
+        <div id="lessons-render-zone">
+            <div class="no-data-msg" style="border: none;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2.5rem; color: #655ecc;"></i>
+                <h3 style="margin-top: 15px;">جاري تحميل المحاضرات...</h3>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const studentCode = localStorage.getItem('savedCode');
+        const savedName = localStorage.getItem('savedName') || "طالب";
+        const mySession = localStorage.getItem('mySession');
+        const myDeviceID = localStorage.getItem('myDeviceID');
+        let isStudentVip = false; 
+
+        if (!studentCode) { window.location.href = 'login.html'; }
+
+        database.ref('students/' + studentCode).on('value', (snapshot) => {
+            if (snapshot.exists()) {
+                const data = snapshot.val();
+                if (data.deviceID && data.deviceID !== myDeviceID) {
+                    alert("تم فك ارتباط هذا الجهاز بحسابك! يرجى تسجيل الدخول مجدداً أو مراجعة المستر.");
+                    window.location.href = 'login.html';
+                }
+                if (data.currentSession && data.currentSession !== mySession) {
+                    alert("تم تسجيل دخولك من جهاز آخر! سيتم طردك الآن.");
+                    window.location.href = 'login.html';
+                }
+                isStudentVip = (data.subscriptionStatus === 'active');
+                updateStatusBanner();
+                renderCombinedVideos(); 
+            }
+        });
+
+        function updateStatusBanner() {
+            const banner = document.getElementById('sub-status-banner');
+            if (isStudentVip) {
+                banner.className = 'status-banner active';
+                banner.innerHTML = '<i class="fa-solid fa-circle-check"></i> حسابك مفعل (VIP) - جميع المحاضرات وملحقاتها مفتوحة لك!';
+            } else {
+                banner.className = 'status-banner';
+                banner.innerHTML = '<span><i class="fa-solid fa-lock"></i> المحاضرات مغلقة.. لم يتم تفعيل اشتراكك!</span> <a href="recharge.html"><i class="fa-solid fa-wallet"></i> اشحن كودك الآن</a>';
+            }
+        }
+
+        function getStudentStage() {
+            let stage = localStorage.getItem('studentStage') || localStorage.getItem('savedGrade') || "first-sec";
+            return stage.toString().trim().toLowerCase();
+        }
+
+        const studentStage = getStudentStage();
+        let stageVideos = {};
+        let allVideos = {};
+
+        function renderCombinedVideos() {
+            const renderZone = document.getElementById('lessons-render-zone');
+            renderZone.innerHTML = ''; 
+            
+            const combinedData = { ...stageVideos, ...allVideos };
+            const keys = Object.keys(combinedData).reverse(); 
+            
+            if (keys.length > 0) {
+                let counter = 1;
+                keys.forEach(key => {
+                    const block = combinedData[key];
+                    
+                    let watchHtml = '';
+                    let examHtml = '';
+                    let hwHtml = '';
+
+                    if (isStudentVip) {
+                        watchHtml = `<button onclick="openVideoPlayer('${key}', '${escapeHTML(block.url)}')" class="btn-watch-green">مشاهدة <i class="fa-solid fa-circle-play"></i></button>`;
+                        examHtml = block.examUrl ? `<a href="${escapeHTML(block.examUrl)}" target="_blank" class="btn-tool-status available"><i class="fa-regular fa-pen-to-square"></i> دخول الاختبار</a>` : `<a href="#" class="btn-tool-status"><i class="fa-regular fa-clock"></i> غير متاح حالياً</a>`;
+                        hwHtml = block.homeworkUrl ? `<a href="${escapeHTML(block.homeworkUrl)}" target="_blank" class="btn-tool-status available"><i class="fa-solid fa-file-pdf"></i> تحميل الواجب</a>` : `<a href="#" class="btn-tool-status"><i class="fa-regular fa-clock"></i> غير متاح حالياً</a>`;
+                    } else {
+                        watchHtml = `<button onclick="window.location.href='recharge.html'" class="btn-locked-red">مقفول للشحن <i class="fa-solid fa-lock"></i></button>`;
+                        examHtml = block.examUrl ? `<a href="recharge.html" class="btn-tool-status locked"><i class="fa-solid fa-lock"></i> يحتاج تفعيل</a>` : `<a href="#" class="btn-tool-status"><i class="fa-regular fa-clock"></i> غير متاح حالياً</a>`;
+                        hwHtml = block.homeworkUrl ? `<a href="recharge.html" class="btn-tool-status locked"><i class="fa-solid fa-lock"></i> يحتاج تفعيل</a>` : `<a href="#" class="btn-tool-status"><i class="fa-regular fa-clock"></i> غير متاح حالياً</a>`;
+                    }
+
+                    const lessonContainer = document.createElement('div');
+                    lessonContainer.style.marginBottom = "35px";
+                    lessonContainer.innerHTML = `
+                        <div class="lesson-main-card">
+                            <div class="lesson-header-bar">
+                                <div class="lesson-badge">الدرس #${counter}</div>
+                                <div class="lesson-title">${escapeHTML(block.title)}</div>
+                            </div>
+                            <div class="lesson-poster-area"><i class="fa-regular fa-address-book"></i><span>مادة علمية</span></div>
+                            <div class="toggle-btn-container">
+                                <button class="btn-toggle-content" id="toggleBtn-${key}" onclick="toggleContent('${key}')">
+                                    إخفاء <i class="fa-solid fa-chevron-down" id="arrow-${key}"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="collapsible-content" id="content-${key}">
+                            <div class="video-section-box">
+                                <div class="section-title-row">
+                                    <span>مقطع الفيديو</span>
+                                    <div class="icon-wrapper-purple"><i class="fa-solid fa-video"></i></div>
+                                </div>
+                                <div class="video-item-row">
+                                    ${watchHtml}
+                                    <div class="video-meta-right"><span>${escapeHTML(block.title)}</span><i class="fa-solid fa-circle-play icon-play-small"></i></div>
+                                </div>
+                                
+                                <div class="video-player-container" id="player-container-${key}">
+                                    <video id="video-${key}" controls controlsList="nodownload" oncontextmenu="return false;">
+                                        <source src="${escapeHTML(block.url)}" type="video/mp4">
+                                        متصفحك لا يدعم تشغيل الفيديو.
+                                    </video>
+                                    <div class="vid-watermark">${savedName} - ${studentCode}</div>
+                                </div>
+
+                                <!-- 📒 الكراسة التفاعلية (جديد) -->
+                                <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; margin-top: 20px;">
+                                    <h4 style="color: #1f3c6d; margin-bottom: 15px; font-size: 1.1rem;"><i class="fa-solid fa-comments"></i> الكراسة التفاعلية للمحاضرة</h4>
+                                    <div id="comments-list-${key}" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px; padding: 10px; background: #f8fafc; border-radius: 10px; border: 1px dashed #cbd5e1;">
+                                        <div style="text-align:center; color:#94a3b8;"><i class="fa-solid fa-spinner fa-spin"></i> جاري التحميل...</div>
+                                    </div>
+                                    <div style="display: flex; gap: 10px;">
+                                        <input type="text" id="comment-input-${key}" placeholder="اكتب سؤالك أو ملاحظتك هنا..." style="flex: 1; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; outline: none; font-size: 0.95rem;">
+                                        <button onclick="addComment('${key}')" style="background: #655ecc; color: white; border: none; padding: 0 20px; border-radius: 10px; font-weight: bold; cursor: pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bottom-tools-grid">
+                                <div class="tool-card-box">
+                                    <div class="tool-icon-center"><i class="fa-solid fa-list-check"></i></div>
+                                    <h3>الاختبار الإلكتروني</h3>
+                                    <p class="tool-status-text">${block.examUrl ? 'الاختبار مرفوع للمنصة.' : 'لم يتم رفع اختبار لهذا الدرس.'}</p>
+                                    ${examHtml}
+                                </div>
+                                <div class="tool-card-box">
+                                    <div class="tool-icon-center"><i class="fa-solid fa-clipboard-check"></i></div>
+                                    <h3>الواجب المنزلي</h3>
+                                    <p class="tool-status-text">${block.homeworkUrl ? 'ملف الواجب مرفوع للمنصة.' : 'لم يتم رفع واجب لهذا الدرس.'}</p>
+                                    ${hwHtml}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    renderZone.appendChild(lessonContainer);
+                    // 🚀 تشغيل التعليقات فوراً
+                    loadComments(key);
+                    counter++;
+                });
+            } else {
+                renderZone.innerHTML = `
+                    <div class="no-data-msg">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <h3>لا توجد محاضرات متاحة حالياً</h3>
+                        <p>لم يتم رفع أي محتوى لصفك الدراسي حتى الآن.. ابقَ مستعداً! 🚀</p>
+                    </div>`;
+            }
+        }
+
+        database.ref(`videos/${studentStage}`).on('value', (snapshot) => {
+            stageVideos = snapshot.val() || {};
+            if(isStudentVip !== null) renderCombinedVideos();
+        });
+
+        database.ref(`videos/all`).on('value', (snapshot) => {
+            allVideos = snapshot.val() || {};
+            if(isStudentVip !== null) renderCombinedVideos();
+        });
+
+        function toggleContent(key) {
+            const contentDiv = document.getElementById(`content-${key}`);
+            const btn = document.getElementById(`toggleBtn-${key}`);
+            if (contentDiv.classList.contains('hidden')) {
+                contentDiv.classList.remove('hidden');
+                btn.innerHTML = `إخفاء <i class="fa-solid fa-chevron-down"></i>`;
+            } else {
+                contentDiv.classList.add('hidden');
+                btn.innerHTML = `عرض <i class="fa-solid fa-chevron-up"></i>`;
+            }
+        }
+
+        function openVideoPlayer(key, url) {
+            const container = document.getElementById(`player-container-${key}`);
+            const video = document.getElementById(`video-${key}`);
+            
+            if (container.style.display === "block") {
+                video.pause();
+                container.style.display = "none";
+                return;
+            }
+            
+            document.querySelectorAll('.video-player-container').forEach(c => {
+                c.style.display = 'none';
+                const vid = c.querySelector('video');
+                if(vid) vid.pause();
+            });
+
+            container.style.display = "block";
+            video.play().catch(e => console.log("تحتاج لتشغيل يدوي", e));
+
+            let maxPercentage = 0;
+            database.ref(`students/${studentCode}/analytics/videos/${key}/progress`).once('value').then(snap => {
+                maxPercentage = snap.val() || 0;
+            });
+
+            video.addEventListener('timeupdate', () => {
+                if (!video.duration) return;
+                const percentage = Math.floor((video.currentTime / video.duration) * 100);
+                if (percentage > maxPercentage && (percentage - maxPercentage >= 5 || percentage === 100)) {
+                    maxPercentage = percentage;
+                    database.ref(`students/${studentCode}/analytics/videos/${key}`).update({
+                        progress: maxPercentage,
+                        lastWatched: firebase.database.ServerValue.TIMESTAMP
+                    });
+                }
+            });
+        }
+
+        // 💬 دوال الكراسة التفاعلية (جديد)
+        function addComment(videoKey) {
+            const inputField = document.getElementById(`comment-input-${videoKey}`);
+            const text = inputField.value.trim();
+            if(!text) return;
+
+            const commentData = {
+                senderName: savedName,
+                text: text,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            database.ref(`interactive_notebook/${videoKey}`).push(commentData).then(() => {
+                inputField.value = ''; 
+            });
+        }
+
+        function loadComments(videoKey) {
+            const ref = database.ref(`interactive_notebook/${videoKey}`);
+            ref.off(); // منع التكرار
+            ref.on('value', (snapshot) => {
+                const commentsDiv = document.getElementById(`comments-list-${videoKey}`);
+                if(!commentsDiv) return;
+                
+                commentsDiv.innerHTML = '';
+                if(snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const data = child.val();
+                        const time = new Date(data.timestamp).toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+                        const isTeacher = data.senderName.includes('مستر') || data.senderName.includes('سيد');
+                        const bg = isTeacher ? '#dcfce7' : '#ffffff';
+                        const border = isTeacher ? '#10b981' : '#e2e8f0';
+
+                        commentsDiv.innerHTML += `
+                            <div style="background:${bg}; border:1px solid ${border}; padding:10px; border-radius:10px; margin-bottom:8px;">
+                                <div style="font-size:0.8rem; color:#64748b; margin-bottom:4px;">
+                                    <strong style="color:${isTeacher ? '#059669' : '#3b82f6'};">${data.senderName}</strong> • ${time}
+                                </div>
+                                <div style="font-size:0.95rem; color:#1e293b;">${escapeHTML(data.text)}</div>
+                            </div>
+                        `;
+                    });
+                    commentsDiv.scrollTop = commentsDiv.scrollHeight;
+                } else {
+                    commentsDiv.innerHTML = '<div style="text-align:center; color:#94a3b8; font-size:0.9rem; padding: 10px;">لا توجد أسئلة أو ملاحظات حتى الآن.</div>';
+                }
+            });
+        }
+
+        function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }); }
+    </script>
+</body>
+</html>

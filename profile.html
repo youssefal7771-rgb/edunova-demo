@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ملفي الشخصي - منصة سيد العربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7fa; color: #333; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+        .container { max-width: 600px; margin: 0 auto; width: 100%; }
+
+        /* الهيدر */
+        .header-section { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .header-section h1 { color: #1f3c6d; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        .btn-back { background: #1f3c6d; color: white; text-decoration: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
+
+        /* كارت البيانات الشخصية */
+        .profile-card { background: white; border-radius: 20px; padding: 30px 20px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid #e2e8f0; position: relative; overflow: hidden; }
+        .profile-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100px; background: linear-gradient(135deg, #2c5957, #1a3635); z-index: 1; }
+        
+        .avatar-container { position: relative; z-index: 2; margin-bottom: 15px; }
+        .avatar { width: 90px; height: 90px; background: #f39c12; border: 4px solid white; border-radius: 50%; margin: 0 auto; display: flex; justify-content: center; align-items: center; font-size: 2.5rem; color: white; box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3); }
+        
+        .student-name { font-size: 1.4rem; font-weight: bold; color: #1c2b46; z-index: 2; position: relative; margin-bottom: 5px; }
+        .student-code { font-family: monospace; font-size: 1.1rem; color: #64748b; font-weight: bold; letter-spacing: 2px; }
+
+        /* كارت النقط والمستوى (نظام التحدي) */
+        .points-card { background: linear-gradient(135deg, #fe9c38, #e67e22); border-radius: 16px; padding: 25px 20px; color: white; margin-bottom: 20px; text-align: center; box-shadow: 0 8px 20px rgba(243, 156, 18, 0.3); position: relative; overflow: hidden; }
+        .points-card i.bg-icon { position: absolute; right: -10px; bottom: -20px; font-size: 8rem; opacity: 0.1; transform: rotate(-15deg); }
+        
+        .points-title { font-size: 1rem; font-weight: 600; margin-bottom: 10px; opacity: 0.9; }
+        .points-value { font-size: 3rem; font-weight: 900; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.1); }
+        .level-badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 0.9rem; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); }
+
+        /* قائمة التفاصيل */
+        .details-list { background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; }
+        .detail-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #f1f5f9; }
+        .detail-item:last-child { border-bottom: none; }
+        .detail-label { font-weight: 600; color: #475569; display: flex; align-items: center; gap: 10px; }
+        .detail-value { font-weight: bold; color: #1c2b46; }
+        
+        .status-active { color: #10b981; background: #dcfce7; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; }
+        .status-inactive { color: #ef4444; background: #fee2e2; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .profile-card { padding: 20px 15px; }
+            .points-value { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <h1><i class="fa-solid fa-id-badge" style="color: #2c5957;"></i> ملفي الشخصي</h1>
+            <a href="dashboard.html" class="btn-back">رجوع</a>
+        </div>
+
+        <!-- كارت البيانات -->
+        <div class="profile-card">
+            <div class="avatar-container">
+                <div class="avatar"><i class="fa-solid fa-user-astronaut"></i></div>
+            </div>
+            <div class="student-name" id="profileName">جاري التحميل...</div>
+            <div class="student-code" id="profileCode">SA-----</div>
+        </div>
+
+        <!-- كارت نظام التحدي والنقاط -->
+        <div class="points-card">
+            <i class="fa-solid fa-fire bg-icon"></i>
+            <div class="points-title">إجمالي النقاط (XP)</div>
+            <div class="points-value" id="profilePoints">0</div>
+            <div class="level-badge" id="profileLevel">مبتدئ</div>
+        </div>
+
+        <!-- تفاصيل الحساب -->
+        <div class="details-list">
+            <div class="detail-item">
+                <div class="detail-label"><i class="fa-solid fa-layer-group" style="color: #3b82f6;"></i> المرحلة الدراسية</div>
+                <div class="detail-value" id="profileStage">---</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label"><i class="fa-solid fa-phone" style="color: #10b981;"></i> هاتف الطالب</div>
+                <div class="detail-value" id="profilePhone">---</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label"><i class="fa-solid fa-star" style="color: #f59e0b;"></i> حالة الاشتراك</div>
+                <div class="detail-value" id="profileStatus">---</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        window.onload = () => {
+            const studentCode = localStorage.getItem('savedCode');
+            if(!studentCode) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // جلب بيانات الطالب من قاعدة البيانات
+            database.ref('students/' + studentCode).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    
+                    // تعبئة البيانات الأساسية
+                    document.getElementById('profileName').innerText = data.name;
+                    document.getElementById('profileCode').innerText = data.code;
+                    document.getElementById('profilePhone').innerText = data.phone || 'غير مسجل';
+                    document.getElementById('profileStage').innerText = translateStage(data.stage);
+                    
+                    // حالة الاشتراك
+                    if(data.subscriptionStatus === 'active') {
+                        document.getElementById('profileStatus').innerHTML = '<span class="status-active">مفعل VIP</span>';
+                    } else {
+                        document.getElementById('profileStatus').innerHTML = '<span class="status-inactive">غير مفعل</span>';
+                    }
+
+                    // 🎯 حساب النقاط (الـ Gamification)
+                    // الفكرة: كل امتحان الطالب حله بياخد عليه 50 نقطة كتشجيع (بدون ذكر الدرجة)
+                    let totalPoints = 0;
+                    if (data.grades) {
+                        const examsCount = Object.keys(data.grades).length;
+                        totalPoints = examsCount * 50; // 50 نقطة على كل امتحان تم إنجازه
+                    }
+                    
+                    // إضافة نقاط إضافية لو موجودة في الداتابيز (لو حبيت تزودله نقط يدوي بعدين)
+                    if (data.bonusPoints) {
+                        totalPoints += data.bonusPoints;
+                    }
+
+                    // عرض النقاط بتأثير عداد شيك
+                    animateValue("profilePoints", 0, totalPoints, 1500);
+
+                    // تحديد مستوى الطالب بناءً على عدد النقاط
+                    let level = "مبتدئ";
+                    if (totalPoints >= 500) level = "أسطورة المنصة 👑";
+                    else if (totalPoints >= 300) level = "بطل محترف 🏆";
+                    else if (totalPoints >= 150) level = "طالب مجتهد 🌟";
+                    else if (totalPoints >= 50) level = "في بداية الطريق 🚀";
+
+                    document.getElementById('profileLevel').innerText = level;
+                }
+            });
+        };
+
+        // دالة لترجمة كود المرحلة لاسم عربي
+        function translateStage(stage) { 
+            switch(stage) { 
+                case 'fourth-primary': return 'الصف الرابع الابتدائي'; 
+                case 'fifth-primary': return 'الصف الخامس الابتدائي'; 
+                case 'sixth-primary': return 'الصف السادس الابتدائي'; 
+                case 'first-prep': return 'الصف الأول الإعدادي'; 
+                case 'second-prep': return 'الصف الثاني الإعدادي'; 
+                case 'third-prep': return 'الصف الثالث الإعدادي'; 
+                case 'first-sec': return 'الصف الأول الثانوي'; 
+                case 'second-sec': return 'الصف الثاني الثانوي'; 
+                case 'third-sec': return 'الصف الثالث الثانوي'; 
+                default: return 'غير محدد'; 
+            } 
+        }
+
+        // دالة حركية لعداد الأرقام (عشان النقط تزيد بشكل انسيابي)
+        function animateValue(id, start, end, duration) {
+            if (start === end) return;
+            let range = end - start;
+            let current = start;
+            let increment = end > start ? 1 : -1;
+            let stepTime = Math.abs(Math.floor(duration / range));
+            let obj = document.getElementById(id);
+            let timer = setInterval(function() {
+                current += increment;
+                obj.innerHTML = current;
+                if (current == end) { clearInterval(timer); }
+            }, stepTime);
+        }
+    </script>
+</body>
+</html>

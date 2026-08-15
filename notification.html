@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الإشعارات - منصة سيد العربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7fa; color: #333; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+        .container { max-width: 600px; margin: 0 auto; width: 100%; }
+
+        .header-section { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        .header-section h1 { color: #1f3c6d; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        .btn-back { background: #1f3c6d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
+
+        .notif-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; border: 1px solid #e2e8f0; border-right: 5px solid #007bff; box-shadow: 0 4px 10px rgba(0,0,0,0.02); display: flex; gap: 15px; transition: 0.3s; }
+        .notif-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.05); }
+        .notif-card.urgent { border-right-color: #ef4444; } /* إشعار عاجل لونه أحمر */
+        .notif-card.success { border-right-color: #10b981; } /* إشعار نجاح لونه أخضر */
+        
+        .notif-icon { width: 45px; height: 45px; border-radius: 50%; background: #f0f7ff; color: #007bff; display: flex; justify-content: center; align-items: center; font-size: 1.3rem; flex-shrink: 0; }
+        .urgent .notif-icon { background: #fef2f2; color: #ef4444; }
+        .success .notif-icon { background: #ecfdf5; color: #10b981; }
+
+        .notif-content { flex: 1; }
+        .notif-title { font-size: 1.1rem; font-weight: bold; color: #1f3c6d; margin-bottom: 5px; }
+        .notif-msg { font-size: 0.95rem; color: #4a5568; line-height: 1.5; margin-bottom: 10px; }
+        .notif-time { font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 5px; }
+
+        .no-data { text-align: center; padding: 50px 20px; background: white; border-radius: 16px; border: 1px dashed #cbd5e1; color: #718096; }
+        .no-data i { font-size: 3rem; color: #cbd5e1; margin-bottom: 15px; }
+
+        @media (max-width: 480px) {
+            body { padding: 10px; }
+            .header-section { padding: 15px; flex-direction: column; gap: 15px; text-align: center; }
+            .notif-card { flex-direction: column; padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <h1><i class="fa-solid fa-bell" style="color: #f39c12;"></i> الإشعارات</h1>
+            <a href="dashboard.html" class="btn-back">رجوع</a>
+        </div>
+
+        <div id="notifications-container">
+            <div class="no-data">
+                <i class="fa-solid fa-spinner fa-spin" style="color: #007bff;"></i>
+                <p>جاري تحميل الإشعارات...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        window.onload = () => {
+            const studentStage = localStorage.getItem('studentStage');
+            if(!studentStage) {
+                alert("يرجى تسجيل الدخول أولاً");
+                window.location.href = 'login.html';
+                return;
+            }
+
+            database.ref('notifications').orderByChild('timestamp').on('value', (snapshot) => {
+                const container = document.getElementById('notifications-container');
+                container.innerHTML = '';
+
+                if (snapshot.exists()) {
+                    let hasNotifications = false;
+                    const allNotifs = [];
+
+                    // تجميع الإشعارات
+                    snapshot.forEach(child => {
+                        allNotifs.push(child.val());
+                    });
+
+                    // عكس الترتيب عشان الأحدث يظهر فوق
+                    allNotifs.reverse().forEach(notif => {
+                        // فلترة: هل الإشعار ده للكل ولا لمرحلة الطالب بس؟
+                        if (notif.stage === 'all' || notif.stage === studentStage) {
+                            hasNotifications = true;
+                            
+                            // تحديد شكل الأيقونة واللون بناءً على نوع الإشعار (ممكن نطورها بعدين)
+                            let cardClass = 'notif-card';
+                            let iconHtml = '<i class="fa-solid fa-bell"></i>';
+                            
+                            if(notif.title.includes('عاجل') || notif.title.includes('هام')) {
+                                cardClass += ' urgent';
+                                iconHtml = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                            } else if(notif.title.includes('نجاح') || notif.title.includes('مبروك')) {
+                                cardClass += ' success';
+                                iconHtml = '<i class="fa-solid fa-check-double"></i>';
+                            }
+
+                            // تحويل الوقت لصيغة مقروءة
+                            const dateObj = new Date(notif.timestamp);
+                            const formattedDate = dateObj.toLocaleDateString('ar-EG') + ' - ' + dateObj.toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'});
+
+                            container.innerHTML += `
+                                <div class="${cardClass}">
+                                    <div class="notif-icon">${iconHtml}</div>
+                                    <div class="notif-content">
+                                        <div class="notif-title">${notif.title}</div>
+                                        <div class="notif-msg">${notif.message}</div>
+                                        <div class="notif-time"><i class="fa-regular fa-clock"></i> ${formattedDate}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    if (!hasNotifications) {
+                        showNoData(container);
+                    }
+                } else {
+                    showNoData(container);
+                }
+            });
+        };
+
+        function showNoData(container) {
+            container.innerHTML = `
+                <div class="no-data">
+                    <i class="fa-regular fa-bell-slash"></i>
+                    <h3>لا توجد إشعارات حالياً</h3>
+                    <p>ستظهر هنا أي تنبيهات أو أخبار جديدة من المستر.</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>بنك الأسئلة - منصة سيد العربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7fa; color: #333; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+        .container { max-width: 800px; margin: 0 auto; width: 100%; }
+
+        .header-section { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid #e2e8f0; }
+        .header-section h1 { color: #10b981; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
+        .btn-back { background: #10b981; color: white; text-decoration: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
+
+        .xp-tracker { text-align: center; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 15px; border-radius: 15px; margin-bottom: 20px; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2); }
+
+        .setup-card, .quiz-card { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 10px; font-weight: bold; color: #475569; }
+        .form-group select { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; outline: none; }
+        
+        .btn-start { background: #0ea5e9; color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .btn-start:hover { background: #0284c7; }
+
+        .question-text { font-size: 1.3rem; font-weight: bold; color: #1e293b; margin-bottom: 25px; line-height: 1.5; }
+        .options-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 25px; }
+        
+        .option-btn { background: #f8fafc; border: 2px solid #e2e8f0; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: bold; color: #475569; cursor: pointer; text-align: right; transition: 0.2s; }
+        .option-btn:hover:not(:disabled) { border-color: #0ea5e9; background: #f0f9ff; }
+        
+        /* ألوان الإجابات */
+        .option-btn.correct { background: #dcfce7 !important; border-color: #10b981 !important; color: #065f46 !important; }
+        .option-btn.wrong { background: #fee2e2 !important; border-color: #ef4444 !important; color: #991b1b !important; }
+        .option-btn:disabled { cursor: not-allowed; opacity: 0.7; }
+
+        .feedback-msg { font-size: 1.1rem; font-weight: bold; text-align: center; margin-bottom: 15px; min-height: 25px; }
+        .msg-correct { color: #10b981; }
+        .msg-wrong { color: #ef4444; }
+
+        .btn-next { background: #1f3c6d; color: white; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; display: none; }
+        
+        @media (max-width: 480px) {
+            .setup-card, .quiz-card { padding: 20px; }
+            .question-text { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <h1><i class="fa-solid fa-brain"></i> التدريب المستمر</h1>
+            <a href="dashboard.html" class="btn-back">رجوع</a>
+        </div>
+
+        <div class="xp-tracker" id="xpTracker">
+            <i class="fa-solid fa-fire" style="color: #f59e0b;"></i> نقاطك الحالية: <span id="studentXp">0</span> XP
+        </div>
+
+        <!-- شاشة اختيار المرحلة -->
+        <div class="setup-card" id="setupCard">
+            <h3 style="margin-bottom: 15px; color: #1e293b;"><i class="fa-solid fa-sliders"></i> إعداد التدريب</h3>
+            <div class="form-group">
+                <label>اختر المرحلة الدراسية للتدريب:</label>
+                <select id="stageSelect">
+                    <option value="fourth-primary">الصف الرابع الابتدائي</option>
+                    <option value="fifth-primary">الصف الخامس الابتدائي</option>
+                    <option value="sixth-primary">الصف السادس الابتدائي</option>
+                    <option value="first-prep">الصف الأول الإعدادي</option>
+                    <option value="second-prep">الصف الثاني الإعدادي</option>
+                    <option value="third-prep" selected>الشهادة الإعدادية (3 ع)</option>
+                    <option value="first-sec">الصف الأول الثانوي</option>
+                    <option value="second-sec">الصف الثاني الثانوي</option>
+                    <option value="third-sec">الشهادة الثانوية (3 ث)</option>
+                </select>
+            </div>
+            <button class="btn-start" onclick="startTraining()">بدأ التدريب الآن <i class="fa-solid fa-rocket"></i></button>
+        </div>
+
+        <!-- شاشة السؤال -->
+        <div class="quiz-card" id="quizCard" style="display: none;">
+            <div class="question-text" id="qText">جاري تحميل السؤال...</div>
+            <div class="options-grid" id="optionsGrid">
+                <!-- الأزرار هتتولد هنا بالجافاسكريبت -->
+            </div>
+            <div id="feedbackMsg" class="feedback-msg"></div>
+            <button class="btn-next" id="btnNext" onclick="loadNextQuestion()">السؤال التالي <i class="fa-solid fa-arrow-left"></i></button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let questionsBank = [];
+        let currentQuestionObj = null;
+        const studentCode = localStorage.getItem('savedCode');
+        let currentXP = 0;
+
+        window.onload = () => {
+            if(!studentCode) window.location.href = 'login.html';
+            
+            // جلب النقط الحالية للطالب وعرضها
+            database.ref('students/' + studentCode).once('value').then(snap => {
+                const data = snap.val();
+                let examPoints = data.grades ? Object.keys(data.grades).length * 50 : 0;
+                let bonus = data.bonusPoints || 0;
+                currentXP = examPoints + bonus;
+                document.getElementById('studentXp').innerText = currentXP;
+            });
+        };
+
+        function startTraining() {
+            const stage = document.getElementById('stageSelect').value;
+            const btn = document.querySelector('.btn-start');
+            btn.innerHTML = 'جاري تحضير الأسئلة... <i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            database.ref('question_bank/' + stage).once('value').then((snapshot) => {
+                if(snapshot.exists()) {
+                    questionsBank = [];
+                    snapshot.forEach(child => { questionsBank.push(child.val()); });
+                    
+                    // لغبطة الأسئلة عشوائياً
+                    questionsBank = questionsBank.sort(() => Math.random() - 0.5);
+                    
+                    document.getElementById('setupCard').style.display = 'none';
+                    document.getElementById('quizCard').style.display = 'block';
+                    loadNextQuestion();
+                } else {
+                    alert("لا توجد أسئلة متاحة لهذه المرحلة حالياً. يرجى مراجعة المستر.");
+                    btn.innerHTML = 'بدأ التدريب الآن <i class="fa-solid fa-rocket"></i>';
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        function loadNextQuestion() {
+            if(questionsBank.length === 0) {
+                document.getElementById('quizCard').innerHTML = `
+                    <div style="text-align:center; padding: 30px;">
+                        <i class="fa-solid fa-trophy" style="font-size: 4rem; color: #f59e0b; margin-bottom: 20px;"></i>
+                        <h2 style="color: #1e293b;">عاش يا بطل!</h2>
+                        <p style="color: #64748b; margin-top: 10px;">أنت خلصت كل أسئلة التدريب المتاحة للمرحلة دي.</p>
+                        <button class="btn-start" style="margin-top: 20px;" onclick="window.location.reload()">تدريب مرحلة أخرى</button>
+                    </div>`;
+                return;
+            }
+
+            currentQuestionObj = questionsBank.pop(); // سحب سؤال من البنك
+            
+            document.getElementById('qText').innerText = currentQuestionObj.question;
+            const optsGrid = document.getElementById('optionsGrid');
+            optsGrid.innerHTML = '';
+            
+            currentQuestionObj.options.forEach((opt, index) => {
+                optsGrid.innerHTML += `<button class="option-btn" onclick="checkAnswer(${index}, this)">${opt}</button>`;
+            });
+
+            document.getElementById('feedbackMsg').innerText = '';
+            document.getElementById('feedbackMsg').className = 'feedback-msg';
+            document.getElementById('btnNext').style.display = 'none';
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            const correctIndex = currentQuestionObj.answer;
+            const allBtns = document.querySelectorAll('.option-btn');
+            
+            // قفل كل الزراير عشان ميجاوبش تاني
+            allBtns.forEach(b => b.disabled = true);
+
+            if(selectedIndex === correctIndex) {
+                // إجابة صحيحة
+                btnElement.classList.add('correct');
+                document.getElementById('feedbackMsg').innerText = 'إجابة صحيحة! عاش يا بطل (+5 XP) 🚀';
+                document.getElementById('feedbackMsg').classList.add('msg-correct');
+                
+                // تزويد النقط في الداتابيز
+                currentXP += 5;
+                document.getElementById('studentXp').innerText = currentXP;
+                database.ref('students/' + studentCode + '/bonusPoints').transaction(currentBonus => {
+                    return (currentBonus || 0) + 5;
+                });
+            } else {
+                // إجابة خاطئة
+                btnElement.classList.add('wrong');
+                allBtns[correctIndex].classList.add('correct'); // تظليل الإجابة الصح
+                document.getElementById('feedbackMsg').innerText = 'إجابة خاطئة.. ركز في اللي جاي!';
+                document.getElementById('feedbackMsg').classList.add('msg-wrong');
+            }
+
+            document.getElementById('btnNext').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

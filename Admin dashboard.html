@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة تحكم مستر | سيد عربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root { --bg-main: #f4f7fa; --bg-card: #ffffff; --bg-input: #ffffff; --accent-teal: #0d9488; --accent-blue: #007bff; --accent-red: #ef4444; --accent-orange: #fe9c38; --accent-purple: #8b5cf6; --text-main: #2d3748; --text-muted: #718096; --border-color: #e2e8f0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); padding: 30px 20px; overflow-x: hidden; }
+        .container { max-width: 1200px; margin: 0 auto; width: 100%; }
+
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 2px solid var(--border-color); margin-bottom: 30px; }
+        header h1 { font-size: 22px; color: var(--text-main); position: relative; font-weight: 700; }
+        header h1::after { content: ''; position: absolute; bottom: -5px; right: 0; width: 60px; height: 3px; background: linear-gradient(90deg, var(--accent-teal), var(--accent-blue)); border-radius: 2px; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+        .full-width { grid-column: 1 / -1; }
+
+        .card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        .card h2 { font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: var(--text-main); }
+        .form-group input, .form-group select { width: 100%; padding: 12px; background-color: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); font-size: 14px; outline: none; transition: 0.3s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent-blue); }
+
+        .btn { color: white; border: none; padding: 12px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.95; }
+        .btn:disabled { background-color: var(--text-muted) !important; cursor: not-allowed; transform: none; }
+        
+        .btn-delete { background-color: var(--accent-red); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+        .btn-copy { background-color: #f8fafc; color: var(--accent-blue); border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; }
+        .btn-add-q { background-color: #f8fafc; color: var(--accent-blue); border: 2px dashed var(--accent-blue); padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 20px; transition: 0.2s; }
+        .btn-add-q:hover { background-color: #eff6ff; }
+
+        .stage-tabs { display: flex; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; white-space: nowrap; }
+        .tab { padding: 8px 16px; background-color: #edf2f7; border: 1px solid var(--border-color); border-radius: 20px; font-size: 13px; cursor: pointer; transition: 0.3s; color: var(--text-muted); font-weight: 600; }
+        .tab.active { background-color: var(--accent-blue); border-color: var(--accent-blue); color: white; }
+
+        .data-list { max-height: 350px; overflow-y: auto; list-style: none; margin-top: 10px; padding-right: 5px; }
+        .data-item { padding: 15px; background-color: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; gap: 15px; }
+        .data-item:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-color: #cbd5e1; transform: translateY(-1px); }
+        .data-item .title { font-weight: bold; font-size: 14px; color: var(--text-main); margin-bottom: 5px; }
+        .data-item .sub { font-size: 12px; color: var(--text-muted); display: flex; gap: 10px; align-items: center; }
+
+        .badge { font-size: 11px; padding: 4px 10px; border-radius: 12px; font-weight: bold; white-space: nowrap; }
+        .badge-blue { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+        .badge-green { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+        
+        .code-display { font-family: monospace; font-size: 16px; font-weight: bold; color: #1f3c6d; letter-spacing: 2px; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s ease; z-index: 1000; padding: 15px; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-box { background: white; padding: 25px; border-radius: 15px; width: 100%; max-width: 450px; max-height: 90vh; overflow-y: auto; transform: scale(0.7); transition: 0.3s ease; position: relative; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-close { position: absolute; top: 15px; left: 15px; background: none; border: none; font-size: 1.5rem; color: #94a3b8; cursor: pointer; }
+        .student-modal-header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .student-modal-header i { font-size: 2.5rem; color: var(--accent-blue); margin-bottom: 10px; }
+        .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; font-size: 14px; }
+        .detail-row:last-child { border: none; }
+        .password-box { background: #fef2f2; color: #ef4444; padding: 2px 8px; border-radius: 6px; font-family: monospace; border: 1px solid #fca5a5; font-weight: bold; }
+
+        .q-block { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 15px; position: relative; }
+        .q-block h4 { font-size: 14px; color: var(--accent-blue); margin-bottom: 10px; }
+        .q-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .q-remove { position: absolute; top: 10px; left: 10px; color: #ef4444; background: none; border: none; font-size: 18px; cursor: pointer; }
+
+        @media (max-width: 768px) {
+            body { padding: 8px 5px; }
+            header { flex-direction: column; align-items: flex-start; gap: 5px; padding-bottom: 8px; margin-bottom: 10px; }
+            header h1 { font-size: 18px; }
+            header h1::after { width: 30px; height: 2px; }
+            .grid { grid-template-columns: 1fr; gap: 10px; }
+            .card { padding: 12px; border-radius: 8px; }
+            .modal-box { padding: 15px; width: 95%; border-radius: 10px; }
+            .detail-row { font-size: 11px; padding: 6px 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>لوحة الإدارة الموحدة</h1>
+            <div class="badge badge-green"><i class="fa-solid fa-wifi"></i> متصل بالسيرفر</div>
+        </header>
+
+        <div class="grid">
+            
+            <!-- 📝 1. صانع الامتحانات -->
+            <div class="card full-width" style="border-top: 4px solid var(--accent-blue);">
+                <h2 style="color: var(--accent-blue);"><i class="fa-solid fa-file-signature"></i> صانع الامتحانات التفاعلية</h2>
+                <form id="examBuilderForm" onsubmit="publishExam(event)">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;">
+                        <div class="form-group">
+                            <label>اسم الاختبار</label>
+                            <input type="text" id="examTitle" placeholder="مثال: اختبار الوحدة الأولى" required>
+                        </div>
+                        <div class="form-group">
+                            <label>المرحلة الدراسية</label>
+                            <select id="examStage" required>
+                                <option value="fourth-primary">4 ابتدائي</option>
+                                <option value="fifth-primary">5 ابتدائي</option>
+                                <option value="sixth-primary">6 ابتدائي</option>
+                                <option value="first-prep">1 إعدادي</option>
+                                <option value="second-prep">2 إعدادي</option>
+                                <option value="third-prep">3 إعدادي</option>
+                                <option value="first-sec">1 ثانوي</option>
+                                <option value="second-sec">2 ثانوي</option>
+                                <option value="third-sec">3 ثانوي</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>المدة (بالدقائق)</label>
+                            <input type="number" id="examTime" placeholder="مثال: 15" min="1" required>
+                        </div>
+                    </div>
+                    <div id="questionsContainer" style="margin-top: 5px;"></div>
+                    <button type="button" class="btn-add-q" onclick="addQuestionBlock()">+ إضافة سؤال جديد</button>
+                    <button type="submit" class="btn" id="btnPublishExam" style="background-color: var(--accent-blue);">
+                        <i class="fa-solid fa-paper-plane"></i> <span>نشر الاختبار للمنصة</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 🧠 2. كارت بنك الأسئلة (التدريب المستمر) الجديد -->
+            <div class="card full-width" style="border-top: 4px solid #10b981;">
+                <h2 style="color: #10b981;"><i class="fa-solid fa-brain"></i> إضافة أسئلة لبنك التدريب (بدون درجات)</h2>
+                <form onsubmit="addToQuestionBank(event)">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <div class="form-group">
+                            <label>نص السؤال</label>
+                            <input type="text" id="bankQText" placeholder="اكتب السؤال هنا..." required>
+                        </div>
+                        <div class="form-group">
+                            <label>المرحلة المستهدفة</label>
+                            <select id="bankQStage" required>
+                                <option value="fourth-primary">4 ابتدائي</option>
+                                <option value="fifth-primary">5 ابتدائي</option>
+                                <option value="sixth-primary">6 ابتدائي</option>
+                                <option value="first-prep">1 إعدادي</option>
+                                <option value="second-prep">2 إعدادي</option>
+                                <option value="third-prep">3 إعدادي (الشهادة)</option>
+                                <option value="first-sec">1 ثانوي</option>
+                                <option value="second-sec">2 ثانوي</option>
+                                <option value="third-sec">3 ثانوي (الشهادة)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="q-grid">
+                        <input type="text" id="bankOpt0" placeholder="الاختيار الأول" style="width:100%; padding:10px; margin-bottom:5px; border:1px solid #cbd5e1; border-radius:5px;" required>
+                        <input type="text" id="bankOpt1" placeholder="الاختيار الثاني" style="width:100%; padding:10px; margin-bottom:5px; border:1px solid #cbd5e1; border-radius:5px;" required>
+                        <input type="text" id="bankOpt2" placeholder="الاختيار الثالث" style="width:100%; padding:10px; margin-bottom:5px; border:1px solid #cbd5e1; border-radius:5px;" required>
+                        <input type="text" id="bankOpt3" placeholder="الاختيار الرابع" style="width:100%; padding:10px; margin-bottom:5px; border:1px solid #cbd5e1; border-radius:5px;" required>
+                    </div>
+                    <div class="form-group" style="margin-top:10px;">
+                        <label>الإجابة الصحيحة</label>
+                        <select id="bankQAnswer" style="border: 1px solid #10b981; color: #10b981; font-weight: bold;">
+                            <option value="0">الاختيار الأول</option>
+                            <option value="1">الاختيار الثاني</option>
+                            <option value="2">الاختيار الثالث</option>
+                            <option value="3">الاختيار الرابع</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn" style="background-color: #10b981;" id="btnBankSubmit">
+                        <i class="fa-solid fa-plus"></i> إضافة السؤال للبنك
+                    </button>
+                </form>
+            </div>
+
+            <!-- 💳 3. مصنع كروت الشحن -->
+            <div class="card" style="border-top: 4px solid var(--accent-orange);">
+                <h2 style="color: var(--accent-orange);"><i class="fa-solid fa-money-check-dollar"></i> كروت الشحن (أرقام فقط)</h2>
+                <form id="cardsForm" onsubmit="generateCards(event)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>المرحلة</label>
+                            <select id="cardTargetStage" required>
+                                <option value="fourth-primary">4 ابتدائي</option>
+                                <option value="fifth-primary">5 ابتدائي</option>
+                                <option value="sixth-primary">6 ابتدائي</option>
+                                <option value="first-prep">1 إعدادي</option>
+                                <option value="second-prep">2 إعدادي</option>
+                                <option value="third-prep">3 إعدادي</option>
+                                <option value="first-sec">1 ثانوي</option>
+                                <option value="second-sec">2 ثانوي</option>
+                                <option value="third-sec">3 ثانوي</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>النوع</label>
+                            <select id="cardType" required>
+                                <option value="session">حصة واحدة</option>
+                                <option value="month">شهر كامل</option>
+                                <option value="term">ترم كامل</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>ملاحظة توضيحية (لك)</label>
+                            <input type="text" id="cardNote" placeholder="مثال: شهر أكتوبر" required>
+                        </div>
+                        <div class="form-group">
+                            <label>العدد</label>
+                            <input type="number" id="cardsCount" placeholder="10" min="1" max="100" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn" id="btnGenerate" style="background-color: var(--accent-orange);">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>توليد الأكواد</span>
+                    </button>
+                </form>
+                <h3 style="margin-top: 15px; font-size: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">🎟️ الأكواد المتاحة</h3>
+                <ul id="cardsList" class="data-list"></ul>
+            </div>
+
+            <!-- 🎬 4. رفع المحاضرات -->
+            <div class="card" style="border-top: 4px solid var(--accent-teal);">
+                <h2 style="color: var(--accent-teal);"><i class="fa-solid fa-cloud-arrow-up"></i> رفع المحاضرات</h2>
+                <form id="videoForm" onsubmit="uploadVideo(event)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>عنوان المحاضرة</label>
+                            <input type="text" id="videoTitle" placeholder="مثال: مراجعة نهائية" required>
+                        </div>
+                        <div class="form-group">
+                            <label>المرحلة</label>
+                            <select id="videoStage" required>
+                                <option value="all">جميع المراحل</option>
+                                <option value="fourth-primary">4 ابتدائي</option>
+                                <option value="fifth-primary">5 ابتدائي</option>
+                                <option value="sixth-primary">6 ابتدائي</option>
+                                <option value="first-prep">1 إعدادي</option>
+                                <option value="second-prep">2 إعدادي</option>
+                                <option value="third-prep">3 إعدادي</option>
+                                <option value="first-sec">1 ثانوي</option>
+                                <option value="second-sec">2 ثانوي</option>
+                                <option value="third-sec">3 ثانوي</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>رابط المحاضرة (YouTube/Drive)</label>
+                        <input type="url" id="videoUrl" placeholder="https://..." required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <div class="form-group">
+                            <label>الاختبار (اختياري)</label>
+                            <input type="url" id="examUrl" placeholder="رابط فورم...">
+                        </div>
+                        <div class="form-group">
+                            <label>الواجب (اختياري)</label>
+                            <input type="url" id="homeworkUrl" placeholder="رابط PDF...">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn" id="submitBtnVideo" style="background-color: var(--accent-teal);">
+                        <i class="fa-solid fa-paper-plane"></i> <span>نشر المحاضرة</span>
+                    </button>
+                </form>
+                <h3 style="margin-top: 15px; font-size: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">📺 المحاضرات المرفوعة</h3>
+                <ul id="videoList" class="data-list"></ul>
+            </div>
+
+            <!-- 🔔 5. كارت الإشعارات -->
+            <div class="card full-width" style="border-top: 4px solid var(--accent-purple);">
+                <h2 style="color: var(--accent-purple);"><i class="fa-solid fa-bullhorn"></i> إرسال إشعار للطلاب</h2>
+                <form onsubmit="sendNotification(event)">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                        <div class="form-group">
+                            <label>عنوان الإشعار (اكتب "عاجل" للون الأحمر)</label>
+                            <input type="text" id="notifTitle" placeholder="مثال: مراجعة هامة ليلة الامتحان!" required>
+                        </div>
+                        <div class="form-group">
+                            <label>المرحلة المستهدفة</label>
+                            <select id="notifStage" required>
+                                <option value="all">جميع المراحل (كل الطلاب)</option>
+                                <option value="fourth-primary">4 ابتدائي</option>
+                                <option value="fifth-primary">5 ابتدائي</option>
+                                <option value="sixth-primary">6 ابتدائي</option>
+                                <option value="first-prep">1 إعدادي</option>
+                                <option value="second-prep">2 إعدادي</option>
+                                <option value="third-prep">3 إعدادي</option>
+                                <option value="first-sec">1 ثانوي</option>
+                                <option value="second-sec">2 ثانوي</option>
+                                <option value="third-sec">3 ثانوي</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>تفاصيل الإشعار</label>
+                        <input type="text" id="notifMessage" placeholder="اكتب التفاصيل هنا..." required>
+                    </div>
+                    <button type="submit" class="btn" style="background-color: var(--accent-purple);" id="btnNotif">
+                        <i class="fa-solid fa-paper-plane"></i> <span>إرسال الإشعار</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 👥 6. قاعدة بيانات الطلاب -->
+            <div class="card full-width" style="border-top: 4px solid #4a5568;">
+                <h2 style="color: #4a5568;"><i class="fa-solid fa-users"></i> قاعدة بيانات الطلاب</h2>
+                <div class="stage-tabs">
+                    <div class="tab active" onclick="switchTab('all')" id="tab-all">الكل</div>
+                    <div class="tab" onclick="switchTab('fourth-primary')" id="tab-fourth-primary">4 ب</div>
+                    <div class="tab" onclick="switchTab('fifth-primary')" id="tab-fifth-primary">5 ب</div>
+                    <div class="tab" onclick="switchTab('sixth-primary')" id="tab-sixth-primary">6 ب</div>
+                    <div class="tab" onclick="switchTab('first-prep')" id="tab-first-prep">1 ع</div>
+                    <div class="tab" onclick="switchTab('second-prep')" id="tab-second-prep">2 ع</div>
+                    <div class="tab" onclick="switchTab('third-prep')" id="tab-third-prep">3 ع</div>
+                    <div class="tab" onclick="switchTab('first-sec')" id="tab-first-sec">1 ث</div>
+                    <div class="tab" onclick="switchTab('second-sec')" id="tab-second-sec">2 ث</div>
+                    <div class="tab" onclick="switchTab('third-sec')" id="tab-third-sec">3 ث</div>
+                </div>
+                <ul id="studentList" class="data-list"></ul>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- نافذة بيانات الطالب المنبثقة الشاملة -->
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal-box">
+            <button class="modal-close" onclick="closeStudentModal()"><i class="fa-solid fa-xmark"></i></button>
+            <div class="student-modal-header">
+                <i class="fa-solid fa-address-card"></i>
+                <h3 id="modalStudentName">اسم الطالب</h3>
+                <p id="modalStudentCode" style="color: var(--text-muted); font-weight:bold;">SA-0000</p>
+            </div>
+            
+            <div class="detail-row"><span class="detail-label">المرحلة</span><span class="detail-value" id="modalStudentStage">---</span></div>
+            <div class="detail-row"><span class="detail-label">الاشتراك</span><span class="detail-value" id="modalStudentSub">---</span></div>
+            <div class="detail-row"><span class="detail-label">هاتف الطالب</span><span class="detail-value" id="modalStudentPhone">---</span></div>
+            <div class="detail-row"><span class="detail-label">ولي الأمر</span><span class="detail-value" id="modalParentPhone">---</span></div>
+            <div class="detail-row"><span class="detail-label">كلمة المرور</span><span class="detail-value password-box" id="modalStudentPassword">---</span></div>
+            <div class="detail-row"><span class="detail-label">ارتباط الجهاز</span><span class="detail-value" id="modalDeviceStatus">---</span></div>
+            
+            <!-- 📊 التقارير التحليلية -->
+            <h4 style="margin-top:20px; border-bottom:2px solid #e2e8f0; padding-bottom:5px; color:var(--accent-blue);"><i class="fa-solid fa-chart-line"></i> تقرير الأداء والمتابعة</h4>
+            <div class="detail-row"><span class="detail-label">إجمالي النقاط (XP)</span><span class="detail-value" id="modalStudentPoints" style="color:#f59e0b; font-weight:bold;">0 XP</span></div>
+            
+            <div style="margin-top:10px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+                <strong style="font-size:12px; color:#475569;"><i class="fa-solid fa-file-signature"></i> درجات الامتحانات:</strong>
+                <div id="modalStudentExams" style="font-size:12px; margin-top:5px; max-height:80px; overflow-y:auto;"></div>
+            </div>
+            
+            <div style="margin-top:10px; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e2e8f0;">
+                <strong style="font-size:12px; color:#475569;"><i class="fa-solid fa-video"></i> نسبة مشاهدة المحاضرات:</strong>
+                <div id="modalStudentVideos" style="font-size:12px; margin-top:5px; max-height:80px; overflow-y:auto;"></div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+                <!-- 💬 زر الواتساب السحري -->
+                <button class="btn" style="background-color: #25D366; color: white;" id="btnWhatsappReport">
+                    <i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i> إرسال تقرير لولي الأمر
+                </button>
+
+                <button class="btn" style="background-color: var(--accent-red); display: none;" id="btnUnbindDevice" onclick="unbindDevice()">
+                    <i class="fa-solid fa-mobile-screen-button"></i> فك ارتباط جهاز الطالب
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        let currentFilter = 'all';
+        let allStudentsData = null;
+        let activeStudentsData = null;
+
+        // ==========================================
+        // 1. نظام صانع الامتحانات
+        // ==========================================
+        let questionCount = 0;
+        function addQuestionBlock() {
+            questionCount++;
+            const container = document.getElementById('questionsContainer');
+            const blockHTML = `
+                <div class="q-block" id="qBlock_${questionCount}">
+                    <button type="button" class="q-remove" onclick="removeQuestionBlock(${questionCount})"><i class="fa-solid fa-xmark"></i></button>
+                    <h4>السؤال رقم ${questionCount}</h4>
+                    <input type="text" class="q-text form-group" placeholder="اكتب السؤال هنا..." style="width:100%; border:1px solid #cbd5e1; border-radius:4px;" required>
+                    <input type="url" class="q-image" placeholder="رابط صورة للسؤال (اختياري)" style="width:100%; border:1px dashed #007bff; border-radius:4px; background-color:#f0f7ff;">
+                    <div class="q-grid">
+                        <input type="text" class="opt-0" placeholder="الاختيار الأول" style="border:1px solid #e2e8f0; border-radius:4px;" required>
+                        <input type="text" class="opt-1" placeholder="الاختيار الثاني" style="border:1px solid #e2e8f0; border-radius:4px;" required>
+                        <input type="text" class="opt-2" placeholder="الاختيار الثالث" style="border:1px solid #e2e8f0; border-radius:4px;" required>
+                        <input type="text" class="opt-3" placeholder="الاختيار الرابع" style="border:1px solid #e2e8f0; border-radius:4px;" required>
+                    </div>
+                    <select class="q-answer" style="width:100%; border:1px solid #007bff; border-radius:4px; font-weight:bold; color:#007bff;">
+                        <option value="0">الإجابة الصحيحة: الاختيار الأول</option>
+                        <option value="1">الإجابة الصحيحة: الاختيار الثاني</option>
+                        <option value="2">الإجابة الصحيحة: الاختيار الثالث</option>
+                        <option value="3">الإجابة الصحيحة: الاختيار الرابع</option>
+                    </select>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', blockHTML);
+            updateQuestionNumbers();
+        }
+
+        function removeQuestionBlock(id) {
+            document.getElementById(`qBlock_${id}`).remove();
+            updateQuestionNumbers();
+        }
+
+        function updateQuestionNumbers() {
+            document.querySelectorAll('.q-block').forEach((block, index) => {
+                block.querySelector('h4').innerText = `السؤال رقم ${index + 1}`;
+            });
+        }
+
+        function publishExam(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnPublishExam');
+            btn.disabled = true;
+            btn.querySelector('span').innerText = 'جاري الرفع...';
+
+            const title = document.getElementById('examTitle').value;
+            const stage = document.getElementById('examStage').value;
+            const time = parseInt(document.getElementById('examTime').value);
+            const questions = [];
+            
+            document.querySelectorAll('.q-block').forEach(block => {
+                questions.push({
+                    question: block.querySelector('.q-text').value.trim(),
+                    imageUrl: block.querySelector('.q-image').value.trim() || null,
+                    options: [
+                        block.querySelector('.opt-0').value.trim(),
+                        block.querySelector('.opt-1').value.trim(),
+                        block.querySelector('.opt-2').value.trim(),
+                        block.querySelector('.opt-3').value.trim()
+                    ],
+                    answer: parseInt(block.querySelector('.q-answer').value)
+                });
+            });
+
+            database.ref(`exams/${stage}`).push({
+                title: title, 
+                stage: stage, 
+                durationMinutes: time, 
+                questions: questions, 
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            }, (error) => {
+                if(!error) {
+                    alert("تم نشر الاختبار بنجاح!");
+                    document.getElementById('examBuilderForm').reset();
+                    document.getElementById('questionsContainer').innerHTML = '';
+                    questionCount = 0;
+                    addQuestionBlock();
+                }
+                btn.disabled = false;
+                btn.querySelector('span').innerText = 'نشر الاختبار للمنصة';
+            });
+        }
+        
+        addQuestionBlock();
+
+        // ==========================================
+        // 2. نظام إضافة بنك الأسئلة (التدريب المستمر)
+        // ==========================================
+        function addToQuestionBank(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnBankSubmit');
+            btn.disabled = true;
+            btn.innerHTML = 'جاري الإضافة...';
+
+            const stage = document.getElementById('bankQStage').value;
+            const qData = {
+                question: document.getElementById('bankQText').value.trim(),
+                options: [
+                    document.getElementById('bankOpt0').value.trim(),
+                    document.getElementById('bankOpt1').value.trim(),
+                    document.getElementById('bankOpt2').value.trim(),
+                    document.getElementById('bankOpt3').value.trim()
+                ],
+                answer: parseInt(document.getElementById('bankQAnswer').value),
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+
+            database.ref(`question_bank/${stage}`).push(qData).then(() => {
+                alert("تم حفظ السؤال في بنك التدريب بنجاح! ✅");
+                document.getElementById('bankQText').value = '';
+                document.getElementById('bankOpt0').value = '';
+                document.getElementById('bankOpt1').value = '';
+                document.getElementById('bankOpt2').value = '';
+                document.getElementById('bankOpt3').value = '';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i> إضافة السؤال للبنك';
+            });
+        }
+
+        // ==========================================
+        // 3. نظام مصنع كروت الشحن
+        // ==========================================
+        function generateCards(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnGenerate');
+            btn.disabled = true;
+            btn.querySelector('span').innerText = 'جاري...';
+            
+            const count = parseInt(document.getElementById('cardsCount').value);
+            const stage = document.getElementById('cardTargetStage').value;
+            const type = document.getElementById('cardType').value;
+            const note = document.getElementById('cardNote').value.trim();
+            const updates = {};
+            
+            for(let i=0; i<count; i++) {
+                let code = '';
+                for(let j=0; j<8; j++) code += Math.floor(Math.random() * 10).toString();
+                code = code.substring(0,4) + '-' + code.substring(4,8);
+                updates['recharge_cards/' + code] = { 
+                    status: 'unused', 
+                    targetStage: stage, 
+                    type: type, 
+                    note: note, 
+                    createdAt: firebase.database.ServerValue.TIMESTAMP 
+                };
+            }
+            
+            database.ref().update(updates).then(() => {
+                alert(`تم توليد ${count} كود بنجاح`);
+                document.getElementById('cardsForm').reset();
+            }).finally(() => {
+                btn.disabled = false;
+                btn.querySelector('span').innerText = 'توليد الأكواد';
+            });
+        }
+
+        database.ref('recharge_cards').orderByChild('status').equalTo('unused').on('value', (snapshot) => {
+            const list = document.getElementById('cardsList');
+            list.innerHTML = '';
+            if(snapshot.exists()) {
+                snapshot.forEach(child => {
+                    const data = child.val();
+                    let typeAr = data.type === 'session' ? 'حصة' : (data.type === 'month' ? 'شهر' : 'ترم');
+                    list.innerHTML += `
+                    <li class="data-item">
+                        <div>
+                            <div class="code-display">${child.key}</div>
+                            <div class="sub">لـ: ${translateStage(data.targetStage)} | [${typeAr}] ${data.note}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn-copy" onclick="copyText('${child.key}')">نسخ الكود</button>
+                        </div>
+                    </li>`;
+                });
+            } else {
+                list.innerHTML = '<li class="data-item" style="justify-content:center;">لا توجد كروت متاحة.</li>';
+            }
+        });
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            alert("تم النسخ: " + text);
+        }
+
+        // ==========================================
+        // 4. نظام رفع المحاضرات
+        // ==========================================
+        function uploadVideo(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtnVideo');
+            btn.disabled = true;
+            btn.querySelector('span').innerText = 'جاري الرفع...';
+            
+            const stage = document.getElementById('videoStage').value;
+            const data = {
+                title: document.getElementById('videoTitle').value,
+                stage: stage,
+                url: document.getElementById('videoUrl').value,
+                link: document.getElementById('videoUrl').value,
+                examUrl: document.getElementById('examUrl').value || null,
+                homeworkUrl: document.getElementById('homeworkUrl').value || null,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            database.ref(`videos/${stage}`).push(data, (err) => {
+                if(!err) {
+                    alert("تم رفع المحاضرة!");
+                    document.getElementById('videoForm').reset();
+                }
+                btn.disabled = false;
+                btn.querySelector('span').innerText = 'نشر المحاضرة';
+            });
+        }
+
+        database.ref('videos').on('value', (snapshot) => {
+            const list = document.getElementById('videoList');
+            list.innerHTML = '';
+            if(snapshot.exists()) {
+                Object.keys(snapshot.val()).forEach(folderStage => {
+                    const folder = snapshot.val()[folderStage];
+                    if(typeof folder === 'object') {
+                        Object.keys(folder).forEach(key => {
+                            const v = folder[key];
+                            list.innerHTML += `
+                            <li class="data-item">
+                                <div>
+                                    <div class="title">${v.title}</div>
+                                    <div class="sub"><span class="badge badge-blue">${translateStage(v.stage)}</span></div>
+                                </div>
+                                <div class="item-actions">
+                                    <button class="btn-delete" onclick="if(confirm('حذف؟')) database.ref('videos/${folderStage}/${key}').remove();">حذف</button>
+                                </div>
+                            </li>`;
+                        });
+                    }
+                });
+            } else {
+                list.innerHTML = '<li class="data-item" style="justify-content:center;">لا توجد محاضرات.</li>';
+            }
+        });
+
+        // ==========================================
+        // 5. نظام الإشعارات
+        // ==========================================
+        function sendNotification(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnNotif');
+            btn.disabled = true;
+            btn.querySelector('span').innerText = 'جاري الإرسال...';
+            
+            database.ref('notifications').push({
+                title: document.getElementById('notifTitle').value.trim(),
+                message: document.getElementById('notifMessage').value.trim(),
+                stage: document.getElementById('notifStage').value,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            }).then(() => {
+                alert("تم إرسال الإشعار بنجاح لطلاب المنصة! 🔔");
+                document.getElementById('notifTitle').value = '';
+                document.getElementById('notifMessage').value = '';
+                btn.disabled = false;
+                btn.querySelector('span').innerText = 'إرسال الإشعار';
+            });
+        }
+
+        // ==========================================
+        // 6. قاعدة بيانات الطلاب وتقرير الواتساب
+        // ==========================================
+        database.ref('students').on('value', (snap) => {
+            allStudentsData = snap.val();
+            renderStudents();
+        });
+        
+        database.ref('active_students').on('value', (snap) => {
+            activeStudentsData = snap.val();
+            renderStudents();
+        });
+
+        function renderStudents() {
+            const list = document.getElementById('studentList');
+            list.innerHTML = '';
+            
+            if(!allStudentsData) {
+                list.innerHTML = '<li class="data-item" style="justify-content:center;">لا يوجد طلاب.</li>';
+                return;
+            }
+            
+            const oneHourAgo = Date.now() - (60 * 60 * 1000);
+            
+            Object.keys(allStudentsData).reverse().forEach(key => {
+                const s = allStudentsData[key];
+                
+                if(currentFilter === 'all' || s.stage === currentFilter) {
+                    const isActive = activeStudentsData && activeStudentsData[key] && activeStudentsData[key].lastSeen > oneHourAgo;
+                    const dot = isActive ? '<span style="color:#16a34a; font-size:10px;"><i class="fa-solid fa-circle"></i> متصل</span>' : '<span style="color:#94a3b8; font-size:10px;"><i class="fa-solid fa-circle"></i> قافل</span>';
+                    const vip = s.subscriptionStatus === 'active' ? '<i class="fa-solid fa-star" style="color:var(--accent-orange); font-size:10px;"></i>' : '';
+                    
+                    list.innerHTML += `
+                    <li class="data-item" style="cursor:pointer;" onclick="openStudentModal('${key}')">
+                        <div>
+                            <div class="title">${s.name} ${vip}</div>
+                            <div class="sub">${dot}</div>
+                        </div>
+                        <div class="item-actions">
+                            <span class="badge badge-blue">${translateStage(s.stage)}</span>
+                        </div>
+                    </li>`;
+                }
+            });
+        }
+
+        function openStudentModal(key) {
+            const s = allStudentsData[key];
+            if(!s) return;
+
+            document.getElementById('modalStudentName').innerText = s.name || 'غير متوفر';
+            document.getElementById('modalStudentCode').innerText = s.code || '---';
+            document.getElementById('modalStudentStage').innerText = translateStage(s.stage);
+            document.getElementById('modalStudentSub').innerHTML = s.subscriptionStatus === 'active' ? '<span style="color:green;">مفعل (VIP)</span>' : '<span style="color:red;">غير مفعل</span>';
+            document.getElementById('modalStudentPhone').innerText = s.phone || '---';
+            document.getElementById('modalParentPhone').innerText = s.parentPhone || '---';
+            document.getElementById('modalStudentPassword').innerText = s.password || '---';
+            
+            if (s.deviceID) {
+                document.getElementById('modalDeviceStatus').innerHTML = '<span style="color:red; font-weight:bold;"><i class="fa-solid fa-lock"></i> مرتبط بجهاز</span>';
+                document.getElementById('btnUnbindDevice').style.display = 'block';
+                document.getElementById('btnUnbindDevice').setAttribute('data-code', key);
+            } else {
+                document.getElementById('modalDeviceStatus').innerHTML = '<span style="color:green; font-weight:bold;"><i class="fa-solid fa-unlock"></i> غير مرتبط</span>';
+                document.getElementById('btnUnbindDevice').style.display = 'none';
+            }
+
+            let waReport = `*تقرير متابعة الطالب:* ${s.name} 🎓\n`;
+            waReport += `الكود: ${s.code}\nالمرحلة: ${translateStage(s.stage)}\n`;
+
+            let totalPoints = 0;
+            let examsHtml = '';
+            
+            if (s.grades && Object.keys(s.grades).length > 0) {
+                const examsCount = Object.keys(s.grades).length;
+                totalPoints = examsCount * 50;
+                waReport += `\n📝 *درجات الامتحانات:*\n`;
+                Object.keys(s.grades).forEach(examName => {
+                    examsHtml += `<div class="detail-row"><span>${examName}</span><span style="color:#0f172a; font-weight:bold;">${s.grades[examName]}</span></div>`;
+                    waReport += `- ${examName}: ${s.grades[examName]}\n`;
+                });
+            } else {
+                examsHtml = '<div style="color:#94a3b8; text-align:center; padding:5px;">لم يحل أي امتحان</div>';
+                waReport += `\n📝 *الامتحانات:* لم يحل أي امتحان حتى الآن.\n`;
+            }
+            document.getElementById('modalStudentExams').innerHTML = examsHtml;
+
+            let videosHtml = '';
+            
+            if (s.analytics && s.analytics.videos && Object.keys(s.analytics.videos).length > 0) {
+                waReport += `\n📺 *نسبة مشاهدة المحاضرات:*\n`;
+                Object.keys(s.analytics.videos).forEach(vidId => {
+                    const prog = s.analytics.videos[vidId].progress || 0;
+                    videosHtml += `<div class="detail-row"><span>محاضرة رقم ${vidId.substring(vidId.length - 4)}</span><span style="color:#0d9488; font-weight:bold;">${prog}%</span></div>`;
+                    waReport += `- مشاهدة محاضرة: ${prog}%\n`;
+                });
+            } else {
+                videosHtml = '<div style="color:#94a3b8; text-align:center; padding:5px;">لم يشاهد أي محاضرة</div>';
+                waReport += `\n📺 *المحاضرات:* لم يشاهد أي محاضرة حتى الآن.\n`;
+            }
+            document.getElementById('modalStudentVideos').innerHTML = videosHtml;
+
+            if (s.bonusPoints) totalPoints += s.bonusPoints;
+            document.getElementById('modalStudentPoints').innerText = totalPoints + ' XP';
+            waReport += `\n⭐ *النقاط الإجمالية:* ${totalPoints} XP\n\nمع تحيات منصة مستر سيد العربي.`;
+
+            const waBtn = document.getElementById('btnWhatsappReport');
+            if (s.parentPhone && s.parentPhone.length >= 10) {
+                let formattedPhone = s.parentPhone;
+                if (formattedPhone.startsWith('0')) formattedPhone = '2' + formattedPhone; 
+                
+                waBtn.style.display = 'block';
+                waBtn.innerHTML = '<i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i> إرسال تقرير لولي الأمر';
+                waBtn.style.backgroundColor = '#25D366';
+                waBtn.onclick = () => {
+                    const encodedMsg = encodeURIComponent(waReport);
+                    window.open(`https://wa.me/${formattedPhone}?text=${encodedMsg}`, '_blank');
+                };
+            } else {
+                waBtn.style.display = 'block';
+                waBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> رقم ولي الأمر غير صالح';
+                waBtn.style.backgroundColor = '#94a3b8';
+                waBtn.onclick = () => alert("الطالب لم يسجل رقم هاتف صحيح لولي الأمر.");
+            }
+
+            document.getElementById('studentModal').classList.add('active');
+        }
+
+        function unbindDevice() {
+            const code = document.getElementById('btnUnbindDevice').getAttribute('data-code');
+            if (confirm("هل أنت متأكد من مسح ارتباط جهاز هذا الطالب؟")) {
+                database.ref('students/' + code + '/deviceID').remove().then(() => {
+                    alert("تم فك ارتباط الجهاز بنجاح!");
+                    closeStudentModal();
+                });
+            }
+        }
+
+        function closeStudentModal() {
+            document.getElementById('studentModal').classList.remove('active');
+        }
+
+        function switchTab(stage) {
+            currentFilter = stage;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${stage}`).classList.add('active');
+            renderStudents();
+        }
+
+        function translateStage(stage) {
+            switch(stage) {
+                case 'fourth-primary': return '4 ب';
+                case 'fifth-primary': return '5 ب';
+                case 'sixth-primary': return '6 ب';
+                case 'first-prep': return '1 ع';
+                case 'second-prep': return '2 ع';
+                case 'third-prep': return '3 ع';
+                case 'first-sec': return '1 ث';
+                case 'second-sec': return '2 ث';
+                case 'third-sec': return '3 ث';
+                default: return 'الكل';
+            }
+        }
+    </script>
+</body>
+</html>

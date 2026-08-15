@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة الشرف والأوائل - منصة سيد العربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7fa; color: #333; min-height: 100vh; padding: 20px; overflow-x: hidden; }
+        .container { max-width: 900px; margin: 0 auto; width: 100%; }
+
+        .header-section { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 25px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        .header-section h1 { color: #1f3c6d; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+        .btn-back { background: #1f3c6d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 0.9rem; transition: 0.2s; white-space: nowrap; }
+        .btn-back:hover { background: #15294a; }
+
+        /* تابات المراحل */
+        .stage-tabs { display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 5px; white-space: nowrap; scrollbar-width: thin; }
+        .tab { padding: 10px 20px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; font-size: 0.9rem; cursor: pointer; transition: 0.3s; color: #718096; font-weight: 600; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .tab.active { background-color: #fe9c38; border-color: #fe9c38; color: white; box-shadow: 0 4px 10px rgba(254, 156, 56, 0.3); }
+
+        /* كارد لوحة الشرف */
+        .leaderboard-card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; }
+        
+        .podium { display: flex; justify-content: center; align-items: flex-end; gap: 15px; padding: 30px 20px; background: linear-gradient(135deg, #f8fafc, #edf2f7); border-bottom: 1px solid #e2e8f0; text-align: center; }
+        .podium-item { display: flex; flex-direction: column; align-items: center; }
+        .podium-avatar { width: 50px; height: 50px; border-radius: 50%; background: #1f3c6d; color: white; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: bold; margin-bottom: 8px; border: 3px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .podium-name { font-weight: bold; font-size: 0.95rem; color: #1f3c6d; margin-bottom: 3px; max-width: 100px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .podium-score { font-size: 0.85rem; color: #0d9488; font-weight: bold; }
+        .podium-rank { width: 40px; border-radius: 8px 8px 0 0; display: flex; justify-content: center; align-items: center; color: white; font-weight: bold; margin-top: 8px; }
+        
+        .rank-1 { height: 90px; background: #fbbf24; } /* ذهبي */
+        .rank-2 { height: 70px; background: #94a3b8; } /* فضي */
+        .rank-3 { height: 50px; background: #b45309; } /* برونزي */
+
+        /* جدول باقي الأوائل */
+        .rank-table { width: 100%; border-collapse: collapse; text-align: right; }
+        .rank-table th { background-color: #f8fafc; color: #718096; padding: 15px 20px; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid #e2e8f0; }
+        .rank-table td { padding: 15px 20px; border-bottom: 1px solid #e2e8f0; font-size: 0.95rem; color: #2d3748; }
+        .rank-table tr:last-child td { border-bottom: none; }
+        .rank-table tr:hover { background-color: #f8fafc; }
+
+        .badge-rank { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: #4a5568; justify-content: center; align-items: center; font-weight: bold; font-size: 0.85rem; }
+        .top-1-badge { background: #fbbf24; color: #fff; }
+        .top-2-badge { background: #94a3b8; color: #fff; }
+        .top-3-badge { background: #b45309; color: #fff; }
+
+        .no-data { text-align: center; padding: 40px; color: #718096; font-style: italic; }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header-section { flex-direction: column; gap: 15px; text-align: center; padding: 15px; }
+            .rank-table th, .rank-table td { padding: 12px 10px; font-size: 0.85rem; }
+            .podium { padding: 20px 10px; gap: 10px; }
+            .podium-avatar { width: 40px; height: 40px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-section">
+            <h1><i class="fa-solid fa-trophy" style="color: #fe9c38;"></i> لوحة الشرف وأوائل الطلاب</h1>
+            <a href="dashboard.html" class="btn-back"><i class="fa-solid fa-house"></i> لوحة التحكم</a>
+        </div>
+
+        <!-- تابات المراحل -->
+        <div class="stage-tabs">
+            <div class="tab active" onclick="switchStage('first-sec')" id="tab-first-sec">1 ثانوي</div>
+            <div class="tab" onclick="switchStage('second-sec')" id="tab-second-sec">2 ثانوي</div>
+            <div class="tab" onclick="switchStage('third-sec')" id="tab-third-sec">3 ثانوي</div>
+            <div class="tab" onclick="switchStage('first-prep')" id="tab-first-prep">1 إعدادي</div>
+            <div class="tab" onclick="switchStage('second-prep')" id="tab-second-prep">2 إعدادي</div>
+            <div class="tab" onclick="switchStage('third-prep')" id="tab-third-prep">3 إعدادي</div>
+            <div class="tab" onclick="switchStage('fourth-primary')" id="tab-fourth-primary">4 ابتدائي</div>
+            <div class="tab" onclick="switchStage('fifth-primary')" id="tab-fifth-primary">5 ابتدائي</div>
+            <div class="tab" onclick="switchStage('sixth-primary')" id="tab-sixth-primary">6 ابتدائي</div>
+        </div>
+
+        <div class="leaderboard-card">
+            <div id="podium-section" class="podium" style="display: none;">
+                <!-- منصة التتويج للأول والثاني والثالث -->
+            </div>
+
+            <table class="rank-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px; text-align: center;">المركز</th>
+                        <th>اسم الطالب</th>
+                        <th style="text-align: center;">المجموع الكلي للدرجات</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-rows">
+                    <tr><td colspan="3" class="no-data">جاري تحميل بيانات لوحة الشرف...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        let currentStage = 'first-sec';
+
+        window.onload = () => {
+            // تحديد مرحلة الطالب الافتراضية لو موجودة في اللوكال ستوريج
+            const savedStage = localStorage.getItem('studentStage');
+            if(savedStage) {
+                currentStage = savedStage;
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                const activeTab = document.getElementById(`tab-${currentStage}`);
+                if(activeTab) activeTab.classList.add('active');
+            }
+            fetchLeaderboardData();
+        };
+
+        function switchStage(stage) {
+            currentStage = stage;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${stage}`).classList.add('active');
+            fetchLeaderboardData();
+        }
+
+        // سحب وحساب مجموع درجات الطلاب لكل مرحلة
+        function fetchLeaderboardData() {
+            database.ref('students').on('value', (snapshot) => {
+                const tbody = document.getElementById('leaderboard-rows');
+                const podiumSection = document.getElementById('podium-section');
+                tbody.innerHTML = '';
+                podiumSection.style.display = 'none';
+
+                if (!snapshot.exists()) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="no-data">لا توجد بيانات مسجلة للطلاب.</td></tr>';
+                    return;
+                }
+
+                let studentsList = [];
+
+                snapshot.forEach(child => {
+                    const student = child.val();
+                    // تصفية حسب المرحلة المتاحة
+                    if (student.stage === currentStage) {
+                        let totalScore = 0;
+                        let totalExams = 0;
+
+                        // حساب مجموع درجات الامتحانات لو موجودة
+                        if (student.grades) {
+                            Object.keys(student.grades).forEach(examKey => {
+                                const exam = student.grades[examKey];
+                                if (exam && typeof exam.score === 'number') {
+                                    totalScore += exam.score;
+                                    totalExams++;
+                                }
+                            });
+                        }
+
+                        studentsList.push({
+                            name: student.name || 'طالب مجهول',
+                            code: student.code || '---',
+                            totalScore: totalScore,
+                            totalExams: totalExams
+                        });
+                    }
+                });
+
+                // ترتيب الطلاب تنازلياً حسب مجموع الدرجات
+                studentsList.sort((a, b) => b.totalScore - a.totalScore);
+
+                if (studentsList.length === 0 || studentsList.every(s => s.totalScore === 0)) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="no-data">لا توجد درجات مسجلة في هذه المرحلة حتى الآن. امتحنوا عشان تظهروا هنا! 🚀</td></tr>';
+                    return;
+                }
+
+                // عرض منصة التتويج لو فيه 3 طلاب على الأقل جابوا درجات
+                if (studentsList.length >= 1 && studentsList[0].totalScore > 0) {
+                    podiumSection.style.display = 'flex';
+                    let podiumHtml = '';
+
+                    // ترتيب العرض في البوديوم: الثاني - الأول - الثالث (عشان الأول يبقوا في النص)
+                    const orderedPodium = [];
+                    if(studentsList[1]) orderedPodium.push({ student: studentsList[1], rank: 2, cls: 'rank-2' });
+                    orderedPodium.push({ student: studentsList[0], rank: 1, cls: 'rank-1' });
+                    if(studentsList[2]) orderedPodium.push({ student: studentsList[2], rank: 3, cls: 'rank-3' });
+
+                    orderedPodium.forEach(p => {
+                        podiumHtml += `
+                            <div class="podium-item">
+                                <div class="podium-avatar"><i class="fa-solid fa-user-graduate"></i></div>
+                                <div class="podium-name" title="${p.student.name}">${p.student.name.split(' ')[0]}</div>
+                                <div class="podium-score">${p.student.totalScore} درجة</div>
+                                <div class="podium-rank ${p.cls}">${p.rank}</div>
+                            </div>
+                        `;
+                    });
+                    podiumSection.innerHTML = podiumHtml;
+                }
+
+                // تعبئة الجدول لباقي الأوائل
+                studentsList.forEach((s, index) => {
+                    let badgeClass = 'badge-rank';
+                    if (index === 0) badgeClass += ' top-1-badge';
+                    else if (index === 1) badgeClass += ' top-2-badge';
+                    else if (index === 2) badgeClass += ' top-3-badge';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="text-align: center;"><span class="${badgeClass}">${index + 1}</span></td>
+                            <td><strong>${escapeHTML(s.name)}</strong></td>
+                            <td style="text-align: center; color: #0d9488; font-weight: bold; font-size: 1.1rem;">${s.totalScore}</td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        function escapeHTML(str) { return String(str || '').replace(/[&<>"']/g, function(m) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]; }); }
+    </script>
+</body>
+</html>

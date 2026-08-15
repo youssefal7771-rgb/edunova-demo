@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>منظومة الاختبارات الإلكترونية - منصة سيد عربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7fa; color: #333; min-height: 100vh; overflow-x: hidden; }
+
+        .top-bar { background-color: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 100; }
+        .exam-info { display: flex; flex-direction: column; }
+        .exam-title { font-size: 1.2rem; font-weight: bold; color: #1f3c6d; }
+        .student-name { font-size: 0.9rem; color: #718096; }
+        
+        .timer-box { background: #fef2f2; color: #ef4444; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 1.2rem; border: 1px solid #fca5a5; display: flex; align-items: center; gap: 8px; }
+        .timer-box.warning { animation: pulse 1s infinite; background: #dc2626; color: white; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        .container { max-width: 800px; margin: 40px auto; padding: 0 20px; }
+
+        .question-card { background: #fff; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); margin-bottom: 25px; border: 1px solid #e2e8f0; display: none; }
+        .question-card.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .question-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px dashed #e2e8f0; padding-bottom: 15px; }
+        .question-num { background: #007bff; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; }
+        .question-points { color: #0d9488; font-weight: bold; font-size: 0.9rem; }
+
+        .question-text { font-size: 1.3rem; color: #2d3748; font-weight: bold; margin-bottom: 25px; line-height: 1.5; }
+
+        .options-list { display: flex; flex-direction: column; gap: 12px; }
+        .option-label { display: flex; align-items: center; padding: 15px 20px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; cursor: pointer; transition: 0.2s; font-size: 1.1rem; font-weight: 600; color: #4a5568; }
+        .option-label:hover { background: #edf2f7; border-color: #cbd5e1; }
+        .option-input { margin-left: 15px; transform: scale(1.3); cursor: pointer; }
+        
+        /* تأثير عند الاختيار */
+        .option-input:checked + .option-text { color: #007bff; }
+        .option-label:has(.option-input:checked) { background: #ebf5ff; border-color: #007bff; }
+
+        .controls { display: flex; justify-content: space-between; margin-top: 30px; }
+        .btn { padding: 12px 25px; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; border: none; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-prev { background: #e2e8f0; color: #4a5568; }
+        .btn-prev:hover { background: #cbd5e1; }
+        .btn-next { background: #007bff; color: white; }
+        .btn-next:hover { background: #0056b3; }
+        .btn-submit { background: #10b981; color: white; display: none; }
+        .btn-submit:hover { background: #059669; }
+
+        /* شاشة النتيجة */
+        .result-screen { text-align: center; background: white; padding: 50px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: none; }
+        .result-icon { font-size: 5rem; margin-bottom: 20px; }
+        .result-icon.success { color: #10b981; }
+        .result-icon.fail { color: #ef4444; }
+        .score-text { font-size: 2.5rem; font-weight: bold; color: #1f3c6d; margin-bottom: 10px; }
+        .score-msg { font-size: 1.2rem; color: #718096; margin-bottom: 30px; }
+        .btn-home { background: #1f3c6d; color: white; padding: 12px 30px; border-radius: 10px; text-decoration: none; font-weight: bold; display: inline-block; }
+
+        @media (max-width: 768px) {
+            .top-bar { padding: 15px; }
+            .exam-title { font-size: 1rem; }
+            .timer-box { font-size: 1rem; padding: 6px 10px; }
+            .question-card { padding: 20px 15px; }
+            .question-text { font-size: 1.1rem; }
+            .option-label { padding: 12px 15px; font-size: 1rem; }
+            .btn { padding: 10px 20px; font-size: 0.95rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="exam-info">
+            <span class="exam-title">اختبار تجريبي: المرايا والعدسات</span>
+            <span class="student-name" id="display-student-name">جاري التحميل...</span>
+        </div>
+        <div class="timer-box" id="timer">
+            <i class="fa-regular fa-clock"></i> <span id="time-text">10:00</span>
+        </div>
+    </div>
+
+    <div class="container" id="exam-container">
+        <!-- الأسئلة هتتولد هنا بالجافاسكريبت -->
+    </div>
+
+    <div class="container" id="result-container">
+        <div class="result-screen" id="result-screen">
+            <div id="result-icon" class="result-icon success"><i class="fa-solid fa-trophy"></i></div>
+            <div class="score-text" id="final-score">0 / 0</div>
+            <div class="score-msg" id="final-msg">أحسنت يا بطل!</div>
+            <a href="dashboard.html" class="btn-home">العودة للوحة التحكم</a>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // 🎯 بيانات الاختبار (كمثال، بعدين هنجيبها من السيرفر)
+        const examData = [
+            { id: 1, question: "الشعاع الضوئي الساقط موازياً للمحور الأصلي لمرآة مقعرة، ينعكس ماراً بـ...", options: ["البؤرة", "مركز التكور", "قطب المرآة", "لا ينعكس"], answer: 0 },
+            { id: 2, question: "العدسة المحدبة الأسمك من المنتصف تكون بؤرتها...", options: ["تقديرية", "حقيقية", "لا يوجد لها بؤرة", "جميع ما سبق"], answer: 1 },
+            { id: 3, question: "إذا وضع جسم عند مركز تكور مرآة مقعرة، تتكون له صورة...", options: ["حقيقية مقلوبة مصغرة", "حقيقية مقلوبة مكبرة", "حقيقية مقلوبة مساوية للجسم", "تقديرية معتدلة مكبرة"], answer: 2 },
+            { id: 4, question: "يستخدم لعلاج قصر النظر عدسة...", options: ["محدبة", "مقعرة", "أسطوانية", "مستوية"], answer: 1 }
+        ];
+
+        let currentQuestion = 0;
+        let userAnswers = new Array(examData.length).fill(null);
+        let examTimeMinutes = 10; // مدة الامتحان بالدقائق
+        let timeRemaining = examTimeMinutes * 60; 
+        let timerInterval;
+
+        window.onload = () => {
+            const savedName = localStorage.getItem('savedName') || "طالب";
+            document.getElementById('display-student-name').innerText = savedName;
+            
+            buildExam();
+            showQuestion(0);
+            startTimer();
+        };
+
+        function buildExam() {
+            const container = document.getElementById('exam-container');
+            
+            examData.forEach((q, index) => {
+                let optionsHtml = '';
+                q.options.forEach((opt, optIndex) => {
+                    optionsHtml += `
+                        <label class="option-label">
+                            <input type="radio" name="q${index}" value="${optIndex}" class="option-input" onchange="saveAnswer(${index}, ${optIndex})">
+                            <span class="option-text">${opt}</span>
+                        </label>
+                    `;
+                });
+
+                const isLast = index === examData.length - 1;
+                const isFirst = index === 0;
+
+                container.innerHTML += `
+                    <div class="question-card" id="q-card-${index}">
+                        <div class="question-header">
+                            <span class="question-num">سؤال ${index + 1} من ${examData.length}</span>
+                            <span class="question-points">درجة واحدة</span>
+                        </div>
+                        <div class="question-text">${q.question}</div>
+                        <div class="options-list">${optionsHtml}</div>
+                        
+                        <div class="controls">
+                            <button class="btn btn-prev" onclick="showQuestion(${index - 1})" ${isFirst ? 'style="visibility:hidden;"' : ''}><i class="fa-solid fa-arrow-right"></i> السابق</button>
+                            ${isLast ? `<button class="btn btn-submit" onclick="submitExam()" style="display:flex;"><i class="fa-solid fa-check-double"></i> إنهاء الامتحان</button>` 
+                                     : `<button class="btn btn-next" onclick="showQuestion(${index + 1})">التالي <i class="fa-solid fa-arrow-left"></i></button>`}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function showQuestion(index) {
+            if(index < 0 || index >= examData.length) return;
+            document.querySelectorAll('.question-card').forEach(card => card.classList.remove('active'));
+            document.getElementById(`q-card-${index}`).classList.add('active');
+            currentQuestion = index;
+        }
+
+        function saveAnswer(questionIndex, optionIndex) {
+            userAnswers[questionIndex] = optionIndex;
+        }
+
+        function startTimer() {
+            const timeText = document.getElementById('time-text');
+            const timerBox = document.getElementById('timer');
+            
+            timerInterval = setInterval(() => {
+                if(timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    submitExam(true); // إنهاء إجباري
+                    return;
+                }
+                
+                timeRemaining--;
+                let m = Math.floor(timeRemaining / 60);
+                let s = timeRemaining % 60;
+                
+                timeText.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                
+                if(timeRemaining <= 60) { // آخر دقيقة ينور أحمر
+                    timerBox.classList.add('warning');
+                }
+            }, 1000);
+        }
+
+        function submitExam(isTimeout = false) {
+            clearInterval(timerInterval);
+            
+            if(!isTimeout) {
+                const unanswered = userAnswers.filter(a => a === null).length;
+                if(unanswered > 0) {
+                    if(!confirm(`لقد تركت ${unanswered} أسئلة بدون إجابة. هل أنت متأكد من إنهاء الامتحان؟`)) {
+                        startTimer(); // رجع العداد لو تراجع
+                        return;
+                    }
+                }
+            }
+
+            // حساب الدرجة
+            let score = 0;
+            examData.forEach((q, index) => {
+                if(userAnswers[index] === q.answer) score++;
+            });
+
+            const percentage = Math.round((score / examData.length) * 100);
+
+            // عرض النتيجة
+            document.getElementById('exam-container').style.display = 'none';
+            document.querySelector('.top-bar').style.display = 'none';
+            
+            const resultScreen = document.getElementById('result-screen');
+            const resultIcon = document.getElementById('result-icon');
+            
+            document.getElementById('final-score').innerText = `${score} / ${examData.length}`;
+            
+            if(percentage >= 50) {
+                resultIcon.className = 'result-icon success';
+                resultIcon.innerHTML = '<i class="fa-solid fa-trophy"></i>';
+                document.getElementById('final-msg').innerText = `ممتاز! لقد اجتزت الاختبار بنسبة ${percentage}%`;
+            } else {
+                resultIcon.className = 'result-icon fail';
+                resultIcon.innerHTML = '<i class="fa-solid fa-face-frown"></i>';
+                document.getElementById('final-msg').innerText = `للأسف لم تجتز الاختبار (النسبة ${percentage}%). تحتاج لمراجعة المحاضرة مرة أخرى.`;
+            }
+
+            resultScreen.style.display = 'block';
+
+            // 🚀 رفع الدرجة على السيرفر
+            const studentCode = localStorage.getItem('savedCode');
+            if(studentCode) {
+                database.ref(`students/${studentCode}/grades/exam_1`).set({
+                    examName: "اختبار المرايا والعدسات",
+                    score: score,
+                    total: examData.length,
+                    percentage: percentage,
+                    date: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شهادة تقدير - منصة سيد العربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f4f7fa; color: #333; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 30px 20px; }
+        
+        .header { width: 100%; max-width: 800px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .header h1 { color: #f59e0b; font-size: 1.5rem; }
+        .btn-back { background: #1f3c6d; color: white; text-decoration: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; }
+
+        .cert-container { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; max-width: 850px; width: 100%; overflow: hidden; }
+        
+        canvas { max-width: 100%; height: auto; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+
+        .btn-download { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 15px 30px; border-radius: 12px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.3s; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.3); }
+        .btn-download:hover { transform: translateY(-3px); }
+        
+        .locked-msg { display: none; text-align: center; padding: 50px 20px; background: white; border-radius: 20px; max-width: 500px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .locked-msg i { font-size: 4rem; color: #cbd5e1; margin-bottom: 20px; }
+        .locked-msg h2 { color: #ef4444; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fa-solid fa-award"></i> شهادة التفوق</h1>
+        <a href="dashboard.html" class="btn-back">رجوع للوحة</a>
+    </div>
+
+    <!-- رسالة لو الطالب لسه مجمعش نقط كفاية -->
+    <div class="locked-msg" id="lockedMsg">
+        <i class="fa-solid fa-lock"></i>
+        <h2>الشهادة مقفولة!</h2>
+        <p style="color: #64748b; line-height: 1.6;">عذراً يا بطل، يجب أن تصل إلى <strong style="color:#f59e0b;">500 XP</strong> على الأقل من خلال حل الامتحانات لمشاهدة وتحميل شهادة التقدير الخاصة بك.</p>
+    </div>
+
+    <!-- حاوية الشهادة -->
+    <div class="cert-container" id="certContainer" style="display: none;">
+        <canvas id="certCanvas" width="1000" height="700"></canvas>
+        <button class="btn-download" onclick="downloadCert()"><i class="fa-solid fa-download"></i> تحميل الشهادة بجودة عالية</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        const studentCode = localStorage.getItem('savedCode');
+        const studentName = localStorage.getItem('savedName') || "طالب متميز";
+
+        window.onload = () => {
+            if(!studentCode) window.location.href = 'login.html';
+
+            // حساب نقاط الطالب للتحقق من الأحقية
+            database.ref('students/' + studentCode).once('value').then(snap => {
+                const data = snap.val();
+                let totalPoints = data.bonusPoints || 0;
+                if (data.grades) { totalPoints += Object.keys(data.grades).length * 50; }
+
+                // لو النقط أقل من 500 مش هيفتحله الشهادة
+                if (totalPoints < 500) {
+                    document.getElementById('lockedMsg').style.display = 'block';
+                } else {
+                    document.getElementById('certContainer').style.display = 'block';
+                    drawCertificate();
+                }
+            });
+        };
+
+        // رسم الشهادة برمجياً (Canvas)
+        function drawCertificate() {
+            const canvas = document.getElementById('certCanvas');
+            const ctx = canvas.getContext('2d');
+
+            // 1. الخلفية
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. البرواز الخارجي
+            ctx.strokeStyle = '#1f3c6d';
+            ctx.lineWidth = 20;
+            ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+            // 3. البرواز الداخلي الذهبي
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(45, 45, canvas.width - 90, canvas.height - 90);
+
+            // 4. النصوص الأساسية
+            ctx.textAlign = 'center';
+            
+            // عنوان المنصة
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '28px Tahoma';
+            ctx.fillText('منصة مستر سيد العربي للتعليم الإلكتروني', canvas.width / 2, 120);
+
+            // كلمة "شهادة تقدير"
+            ctx.fillStyle = '#1f3c6d';
+            ctx.font = 'bold 70px Tahoma';
+            ctx.fillText('شَهَادَة تَقْدِير وَتَفَوُّق', canvas.width / 2, 220);
+
+            // النص التمهيدي
+            ctx.fillStyle = '#475569';
+            ctx.font = '30px Tahoma';
+            ctx.fillText('تتشرف إدارة المنصة بمنح هذه الشهادة للطالب الأسطورة:', canvas.width / 2, 320);
+
+            // اسم الطالب (باللون الأخضر المميز)
+            ctx.fillStyle = '#0d9488';
+            ctx.font = 'bold 65px Tahoma';
+            ctx.fillText(studentName, canvas.width / 2, 420);
+
+            // سبب الشهادة
+            ctx.fillStyle = '#475569';
+            ctx.font = '28px Tahoma';
+            ctx.fillText('وذلك لاجتيازه الاختبارات بتفوق، والتزامه العلمي والأخلاقي عبر المنصة.', canvas.width / 2, 510);
+            ctx.fillText('متمنين له دوام التوفيق والنجاح الدائم.', canvas.width / 2, 560);
+
+            // 5. التوقيع والتاريخ
+            ctx.fillStyle = '#1f3c6d';
+            ctx.font = 'bold 24px Tahoma';
+            
+            // اليمين (توقيع المستر)
+            ctx.fillText('توقيع مقدم المادة', 250, 620);
+            ctx.font = '35px Tahoma';
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillText('سيد العربي', 250, 660);
+
+            // اليسار (التاريخ)
+            ctx.fillStyle = '#1f3c6d';
+            ctx.font = 'bold 24px Tahoma';
+            ctx.fillText('تاريخ الإصدار', 750, 620);
+            ctx.font = '28px Tahoma';
+            ctx.fillStyle = '#0d9488';
+            const today = new Date().toLocaleDateString('ar-EG');
+            ctx.fillText(today, 750, 660);
+        }
+
+        // دالة التحميل
+        function downloadCert() {
+            const canvas = document.getElementById('certCanvas');
+            const link = document.createElement('a');
+            link.download = `شهادة_تفوق_${studentName.replace(/\s+/g, '_')}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0); // أعلى جودة
+            link.click();
+        }
+    </script>
+</body>
+</html>

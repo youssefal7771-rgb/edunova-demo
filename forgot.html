@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استعادة كلمة المرور - منصة سيد العربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+
+        .forgot-card {
+            background-color: #ffffff;
+            padding: 40px 35px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            width: 430px;
+            text-align: center;
+        }
+
+        .forgot-card h2 {
+            color: #1a2536;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .forgot-card .subtitle {
+            color: #8a94a6;
+            font-size: 0.95rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+            text-align: right;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 45px 15px 15px;
+            border: 1.5px solid #eef0f3;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.3s;
+            background-color: #fcfdfe;
+            color: #333;
+        }
+
+        .form-group input:focus {
+            border-color: #fe9c38;
+            background-color: #fff;
+        }
+
+        .form-group i {
+            position: absolute;
+            right: 18px;
+            top: 43px;
+            color: #8a94a6;
+            font-size: 1.1rem;
+        }
+
+        /* الجزء المخفي الخاص بالباسورد الجديد */
+        #reset-section {
+            display: none;
+            border-top: 2px dashed #eef0f3;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+
+        .btn-action {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #fe9c38, #e0852b);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(254, 156, 56, 0.3);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(254, 156, 56, 0.4);
+        }
+
+        .btn-back {
+            background: none;
+            border: none;
+            color: #2b7a78;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        /* ستايل الرسالة المخصصة في نص الشاشة (Modal) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s ease;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 380px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: scale(0.7);
+            transition: 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-box h3 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .modal-box p {
+            color: #555;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .modal-btn {
+            background: linear-gradient(90deg, #fe9c38, #e0852b);
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="forgot-card">
+        <h2>استعادة الحساب</h2>
+        <p class="subtitle">أدخل رقم الهاتف المسجل لتأكيد هويتك وتغيير كلمة المرور بأمان.</p>
+
+        <div id="phone-section">
+            <div class="form-group">
+                <label>رقم هاتف الطالب</label>
+                <i class="fa-solid fa-phone"></i>
+                <input type="tel" id="check-phone" placeholder="أدخل رقم الموبايل المسجل به">
+            </div>
+            <button class="btn-action" onclick="verifyPhoneNumber()">التحقق من الرقم وإرسال الرمز</button>
+        </div>
+
+        <div id="reset-section">
+            <div class="form-group">
+                <label>كلمة المرور الجديدة</label>
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="new-password" placeholder="أدخل كلمة المرور الجديدة">
+            </div>
+            <button class="btn-action" onclick="updatePassword()">تحديث كلمة المرور</button>
+        </div>
+
+        <button class="btn-back" onclick="window.location.href='login.html'">👉 العودة لصفحة تسجيل الدخول</button>
+    </div>
+
+    <div class="modal-overlay" id="customAlert">
+        <div class="modal-box">
+            <h3 id="alertTitle">تنبيه</h3>
+            <p id="alertMessage">الرسالة هنا</p>
+            <button class="modal-btn" onclick="closeAlert()">موافق</button>
+        </div>
+    </div>
+
+    <script>
+        let isSuccessOperation = false;
+
+        function verifyPhoneNumber() {
+            const enteredPhone = document.getElementById('check-phone').value.trim();
+            const savedPhone = localStorage.getItem('savedPhone');
+
+            if (!enteredPhone) {
+                showAlert("❌ تنبيه", "برجاء كتابة رقم الهاتف أولاً.", "#d9534f");
+                return;
+            }
+
+            // التأكد أن الرقم يطابق الحساب المسجل
+            if (enteredPhone === savedPhone) {
+                // محاكاة إرسال الرسالة والنجاح في نص الشاشة
+                showAlert("📨 تم التحقق بنجاح", "تم إرسال رمز التأكيد لهاتفك والتحقق منه تلقائياً. برجاء تعيين كلمة المرور الجديدة بالأسفل.", "#2b7a78");
+                
+                // إخفاء خانة الهاتف وإظهار خانة الباسورد الجديد
+                document.getElementById('phone-section').style.display = 'none';
+                document.getElementById('reset-section').style.display = 'block';
+            } else {
+                showAlert("❌ خطأ في التحقق", "عذراً، هذا الرقم غير مسجل في المنصة. تأكد من الرقم الصحيح.", "#d9534f");
+            }
+        }
+
+        function updatePassword() {
+            const newPass = document.getElementById('new-password').value.trim();
+
+            if (newPass.length < 4) {
+                showAlert("⚠️ كلمة مرور ضعيفة", "برجاء كتابة كلمة مرور قوية لا تقل عن 4 عناصر.", "#fe9c38");
+                return;
+            }
+
+            // تحديث الباسورد في ذاكرة المتصفح
+            localStorage.setItem('savedPassword', newPass);
+            isSuccessOperation = true;
+
+            showAlert("🎉 تم التحديث بنجاح", "تم تغيير كلمة المرور بنجاح يا بطل! يمكنك الآن تسجيل الدخول ببياناتك الجديدة.", "#2b7a78");
+        }
+
+        // دالة إظهار المودال في نص الشاشة
+        function showAlert(title, message, titleColor) {
+            document.getElementById('alertTitle').innerText = title;
+            document.getElementById('alertTitle').style.color = titleColor;
+            document.getElementById('alertMessage').innerText = message;
+            document.getElementById('customAlert').classList.add('active');
+        }
+
+        function closeAlert() {
+            document.getElementById('customAlert').classList.remove('active');
+            // لو تم التحديث بنجاح يرجعه لصفحة تسجيل الدخول
+            if (isSuccessOperation) {
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+
+</body>
+</html>

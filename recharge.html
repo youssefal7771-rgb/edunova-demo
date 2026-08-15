@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>شحن الرصيد والاشتراكات - منصة سيد العربي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #ebf1fa; color: #333; min-height: 100vh; padding-bottom: 50px; overflow-x: hidden;}
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.15; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80"><text y="25" x="10" font-family="FontAwesome" font-size="12" fill="%232b7a78">⚛</text><text y="30" x="60" font-family="FontAwesome" font-size="10" fill="%23fe9c38">🧪</text></svg>'); background-repeat: repeat; }
+
+        .navbar { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); height: 70px; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border-bottom: 1px solid #eef0f3; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; }
+        .navbar .logo { font-size: 1.3rem; font-weight: 800; color: #1f3c6d; }
+        .student-profile { background-color: #f1f4f9; padding: 8px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #e1e6ef; }
+        .student-name { font-size: 0.9rem; font-weight: bold; color: #1a2536; white-space: nowrap; }
+        .avatar-circle { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #4cb5ab, #2b7a78); display: flex; justify-content: center; align-items: center; color: white; flex-shrink: 0;}
+
+        .main-container { margin-top: 120px; display: flex; justify-content: center; align-items: center; padding: 0 20px; width: 100%; }
+
+        .recharge-card { background: #ffffff; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); padding: 40px; width: 100%; max-width: 500px; text-align: center; border: 1px solid #eef0f3; position: relative; overflow: hidden; }
+        .recharge-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(90deg, #fe9c38, #ff3366); }
+
+        .icon-wallet { font-size: 3.5rem; color: #fe9c38; margin-bottom: 15px; }
+        .recharge-card h2 { color: #1a2536; font-size: 1.6rem; margin-bottom: 10px; }
+        .recharge-card p { color: #8a94a6; font-size: 0.95rem; margin-bottom: 30px; line-height: 1.5; }
+
+        .input-group { margin-bottom: 25px; text-align: right; }
+        .input-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #4e5d78; font-size: 0.95rem; }
+        .code-input { width: 100%; padding: 15px; border: 2px dashed #cbd5e1; border-radius: 12px; font-size: 1.5rem; text-align: center; letter-spacing: 4px; outline: none; transition: 0.3s; background-color: #f8fafc; color: #1f3c6d; font-weight: bold; direction: ltr; }
+        .code-input:focus { border-color: #fe9c38; background-color: #fff; box-shadow: 0 0 10px rgba(254, 156, 56, 0.1); }
+
+        .btn-submit { width: 100%; background: linear-gradient(90deg, #fe9c38, #e0852b); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; box-shadow: 0 5px 15px rgba(254, 156, 56, 0.3); }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(254, 156, 56, 0.4); }
+        .btn-submit:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; transform: none; }
+
+        .btn-back { display: inline-block; margin-top: 20px; color: #4e5d78; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s; }
+        .btn-back:hover { color: #1f3c6d; }
+
+        .spinner { display: none; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; z-index: 2000; padding: 15px; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .modal-box { background: white; padding: 30px; border-radius: 16px; width: 100%; max-width: 380px; text-align: center; transform: scale(0.7); transition: 0.3s; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-icon { font-size: 3rem; margin-bottom: 15px; }
+        .icon-success { color: #10b981; }
+        .icon-error { color: #ef4444; }
+        .modal-title { font-size: 1.4rem; color: #1a2536; margin-bottom: 10px; }
+        .modal-msg { color: #8a94a6; margin-bottom: 20px; line-height: 1.5; font-size: 0.95rem; }
+        .modal-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; font-size: 1rem; }
+        .btn-green { background: #10b981; }
+        .btn-red { background: #ef4444; }
+
+        /* 📱 التجاوب مع شاشات الموبايل */
+        @media (max-width: 480px) {
+            .navbar { padding: 0 15px; }
+            .navbar .logo { font-size: 1.1rem; }
+            .student-name { font-size: 0.8rem; }
+            .avatar-circle { width: 28px; height: 28px; }
+            
+            .main-container { margin-top: 100px; padding: 0 15px; }
+            .recharge-card { padding: 30px 20px; }
+            .recharge-card h2 { font-size: 1.4rem; }
+            .code-input { font-size: 1.3rem; letter-spacing: 2px; padding: 12px; }
+            .modal-box { padding: 25px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="logo">Mr.Sayed Araby</div>
+        <div class="student-profile">
+            <span class="student-name" id="nav-student-name">طالب</span>
+            <div class="avatar-circle"><i class="fa-solid fa-user"></i></div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="recharge-card">
+            <i class="fa-solid fa-wallet icon-wallet"></i>
+            <h2>تفعيل كارت الاشتراك</h2>
+            <p>أدخل الكود المكون من 8 أرقام لتفعيل اشتراكك وفتح المحاضرات المقفولة لمرحلتك.</p>
+
+            <form onsubmit="handleRecharge(event)">
+                <div class="input-group">
+                    <label>كود الكارت الرقمي</label>
+                    <input type="text" id="cardCode" class="code-input" placeholder="XXXX-XXXX" autocomplete="off" required>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <span>تفعيل الكود الآن</span>
+                    <div class="spinner" id="spinner"></div>
+                </button>
+            </form>
+
+            <a href="dashboard.html" class="btn-back">← العودة للوحة التحكم</a>
+        </div>
+    </main>
+
+    <!-- المودال (الرسالة المنبثقة) -->
+    <div class="modal-overlay" id="resultModal">
+        <div class="modal-box">
+            <div id="modalIcon" class="modal-icon icon-success"><i class="fa-solid fa-circle-check"></i></div>
+            <h3 id="modalTitle" class="modal-title">تم الشحن بنجاح!</h3>
+            <p id="modalMsg" class="modal-msg">تم تفعيل اشتراكك بنجاح.</p>
+            <button class="modal-btn btn-green" id="modalBtn" onclick="closeModal()">متابعة</button>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        window.onload = () => {
+            const savedName = localStorage.getItem('savedName') || "طالب";
+            document.getElementById('nav-student-name').innerText = savedName.split(' ')[0];
+        };
+
+        // تنسيق الكود تلقائياً أثناء الكتابة (أرقام فقط + يضيف شرطة)
+        document.getElementById('cardCode').addEventListener('input', function (e) {
+            let target = e.target;
+            let val = target.value.replace(/-/g, '').replace(/\D/g, ''); 
+            if (val.length > 4) val = val.slice(0,4) + '-' + val.slice(4,8);
+            target.value = val;
+        });
+
+        function translateStage(stage) {
+            switch(stage) {
+                case 'fourth-primary': return 'الصف الرابع الابتدائي'; 
+                case 'fifth-primary': return 'الصف الخامس الابتدائي'; 
+                case 'sixth-primary': return 'الصف السادس الابتدائي';
+                case 'first-prep': return 'الصف الأول الإعدادي'; 
+                case 'second-prep': return 'الصف الثاني الإعدادي'; 
+                case 'third-prep': return 'الصف الثالث الإعدادي';
+                case 'first-sec': return 'الصف الأول الثانوي'; 
+                case 'second-sec': return 'الصف الثاني الثانوي'; 
+                case 'third-sec': return 'الصف الثالث الثانوي';
+                default: return 'مرحلة أخرى';
+            }
+        }
+
+        function handleRecharge(e) {
+            e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
+            const spinner = document.getElementById('spinner');
+            const cardInput = document.getElementById('cardCode').value.trim();
+            const studentCode = localStorage.getItem('savedCode'); 
+            const studentStage = localStorage.getItem('studentStage') || localStorage.getItem('savedGrade');
+
+            if (!studentCode) {
+                showModal('error', 'خطأ في الحساب', 'الرجاء تسجيل الدخول أولاً من الصفحة الرئيسية.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.querySelector('span').innerText = "جاري التحقق...";
+            spinner.style.display = "block";
+
+            database.ref('recharge_cards/' + cardInput).once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    const cardData = snapshot.val();
+
+                    if (cardData.status === 'used') {
+                        showModal('error', 'الكود مستخدم ⚠️', 'عفواً، تم استخدام هذا الكارت من قبل.');
+                    } 
+                    else if (cardData.targetStage && cardData.targetStage !== studentStage) {
+                        showModal('error', 'كارت غير متوافق ❌', `هذا الكود مخصص لـ (${translateStage(cardData.targetStage)}) وأنت مسجل في (${translateStage(studentStage)}).`);
+                    } 
+                    else {
+                        const updates = {};
+                        updates['recharge_cards/' + cardInput + '/status'] = 'used';
+                        updates['recharge_cards/' + cardInput + '/usedBy'] = studentCode;
+                        updates['recharge_cards/' + cardInput + '/usedAt'] = firebase.database.ServerValue.TIMESTAMP;
+                        
+                        updates['students/' + studentCode + '/subscriptionStatus'] = 'active';
+                        updates['students/' + studentCode + '/subscriptionType'] = cardData.type || 'session';
+
+                        database.ref().update(updates).then(() => {
+                            localStorage.setItem('isSubscribed', 'true');
+                            showModal('success', 'تم الشحن بنجاح! 🎉', 'تم تفعيل اشتراكك بنجاح، يمكنك الآن الدخول لصفحة المحاضرات ومشاهدة الدروس المغلقة.');
+                            document.getElementById('cardCode').value = '';
+                        });
+                    }
+                } else {
+                    showModal('error', 'كود غير صحيح', 'تأكد من كتابة الـ 8 أرقام بشكل صحيح وحاول مرة أخرى.');
+                }
+            }).catch((error) => {
+                showModal('error', 'خطأ في الاتصال', 'يرجى التحقق من الإنترنت.');
+            }).finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.querySelector('span').innerText = "تفعيل الكود الآن";
+                spinner.style.display = "none";
+            });
+        }
+
+        function showModal(type, title, msg) {
+            const modal = document.getElementById('resultModal');
+            const icon = document.getElementById('modalIcon');
+            const btn = document.getElementById('modalBtn');
+            
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMsg').innerText = msg;
+
+            if (type === 'success') {
+                icon.className = 'modal-icon icon-success';
+                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+                btn.className = 'modal-btn btn-green';
+            } else {
+                icon.className = 'modal-icon icon-error';
+                icon.innerHTML = '<i class="fa-solid fa-circle-xmark"></i>';
+                btn.className = 'modal-btn btn-red';
+            }
+            modal.classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('resultModal').classList.remove('active'); }
+    </script>
+</body>
+</html>
