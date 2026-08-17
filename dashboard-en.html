@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>لوحة تحكم الطالب - منصة سيد عربي</title>
+    <title>Student Dashboard - Mr. Sayed Araby</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2b7a78">
@@ -25,32 +25,32 @@
         
         .menu-item { position: relative; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #4e5d78; padding: 25px 5px; transition: color 0.3s; }
         .dropdown { position: relative; }
-        .dropdown-content { visibility: hidden; opacity: 0; position: absolute; background-color: #fff; min-width: 180px; box-shadow: 0px 10px 20px rgba(0,0,0,0.1); border-radius: 8px; z-index: 1001; top: 100%; right: 0; transform: translateY(10px); transition: all 0.3s ease; border: 1px solid #eef0f3; }
+        .dropdown-content { visibility: hidden; opacity: 0; position: absolute; background-color: #fff; min-width: 180px; box-shadow: 0px 10px 20px rgba(0,0,0,0.1); border-radius: 8px; z-index: 1001; top: 100%; left: 0; transform: translateY(10px); transition: all 0.3s ease; border: 1px solid #eef0f3; }
         .dropdown-content a { color: #4e5d78; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #f8f9fa; transition: background 0.3s, color 0.3s; }
-        .dropdown-content a:hover { background-color: #f1f4f9; color: #2b7a78; padding-right: 20px; }
+        .dropdown-content a:hover { background-color: #f1f4f9; color: #2b7a78; padding-left: 20px; }
         .dropdown-content a:last-child { border-bottom: none; }
         .menu-item:hover .dropdown-content { visibility: visible; opacity: 1; transform: translateY(0); }
         
-        /* 🛠️ الأيقونات العلوية */
+        /* 🛠️ Top Icons */
         .top-icons { display: flex; align-items: center; gap: 15px; color: #1f3c6d; font-size: 1.25rem; cursor: pointer; }
         .top-icons i { transition: color 0.3s, transform 0.2s; padding: 5px; }
         .top-icons i:hover { color: #2b7a78; transform: scale(1.1); }
 
-        /* 🛠️ بروفايل الطالب والقائمة المنسدلة */
+        /* 🛠️ Student Profile */
         .profile-dropdown-container { position: relative; }
         .student-profile { background-color: #f1f4f9; padding: 8px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #e1e6ef; cursor: pointer; transition: 0.3s; user-select: none; }
         .student-profile:hover { background-color: #e4e9f2; }
         .student-name { font-size: 0.9rem; font-weight: bold; color: #1a2536; white-space: nowrap; transition: color 0.3s; }
         .avatar-circle { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #a78bfa, #8b5cf6); border: 2px solid #ddd6fe; display: flex; justify-content: center; align-items: center; color: white; flex-shrink: 0; font-size: 0.9rem; }
         
-        .user-menu-dropdown { visibility: hidden; opacity: 0; position: absolute; top: 100%; left: 0; margin-top: 10px; background: #fff; min-width: 250px; box-shadow: 0px 10px 25px rgba(0,0,0,0.12); border-radius: 12px; padding: 20px 15px; z-index: 1002; transform: translateY(10px); transition: all 0.3s ease; border: 1px solid #eef0f3; text-align: center; }
+        .user-menu-dropdown { visibility: hidden; opacity: 0; position: absolute; top: 100%; right: 0; margin-top: 10px; background: #fff; min-width: 250px; box-shadow: 0px 10px 25px rgba(0,0,0,0.12); border-radius: 12px; padding: 20px 15px; z-index: 1002; transform: translateY(10px); transition: all 0.3s ease; border: 1px solid #eef0f3; text-align: left; }
         .user-menu-dropdown.show { visibility: visible; opacity: 1; transform: translateY(0); }
         
-        .user-code { font-size: 0.95rem; font-weight: 600; color: #4e5d78; margin-bottom: 12px; }
+        .user-code { font-size: 0.95rem; font-weight: 600; color: #4e5d78; margin-bottom: 12px; text-align: center; }
         .user-divider { border: none; border-top: 1px solid #eef0f3; margin: 15px 0; transition: border-color 0.3s; }
-        .user-points { font-size: 1rem; font-weight: bold; color: #334155; margin-bottom: 15px; }
+        .user-points { font-size: 1rem; font-weight: bold; color: #334155; margin-bottom: 15px; text-align: center; }
         
-        .user-menu-links { list-style: none; text-align: right; }
+        .user-menu-links { list-style: none; text-align: left; }
         .user-menu-links li { margin-bottom: 5px; }
         .user-menu-links a { display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; color: #64748b; text-decoration: none; font-size: 0.95rem; font-weight: 600; transition: 0.3s; border-bottom: 1px dashed #eef0f3; }
         .user-menu-links a:hover { color: #1a2536; background-color: #f8fafc; border-radius: 8px; border-bottom-color: transparent; }
@@ -67,7 +67,7 @@
         .card-code { border-top-color: #2b7a78; }
         .card-lectures { border-top-color: #fe9c38; cursor: pointer; }
         .card-link { border-top-color: #ff3366; }
-        .stat-info { text-align: right; width: 100%; }
+        .stat-info { text-align: left; width: 100%; }
         .stat-number { font-size: 2.2rem; font-weight: bold; color: #1f3c6d; margin-bottom: 5px; display: block; transition: color 0.3s; }
         .stat-label { color: #8a94a6; font-size: 0.9rem; font-weight: 600; transition: color 0.3s; }
         .icon-box { width: 55px; height: 55px; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: white; font-size: 1.5rem; transition: 0.3s; flex-shrink: 0; }
@@ -99,12 +99,12 @@
         #hidden-qrcode { display: none; }
 
         .grades-container { background: rgba(255, 255, 255, 0.93); border-radius: 16px; padding: 30px; border: 1px solid #eef0f3; position: relative; overflow-x: auto; transition: background 0.3s, border-color 0.3s; }
-        .grades-header { font-size: 1.25rem; font-weight: bold; color: #1a2536; margin-bottom: 25px; text-align: right; transition: color 0.3s; }
-        .grades-table { width: 100%; min-width: 400px; border-collapse: collapse; text-align: center; margin-bottom: 25px; }
+        .grades-header { font-size: 1.25rem; font-weight: bold; color: #1a2536; margin-bottom: 25px; text-align: left; transition: color 0.3s; }
+        .grades-table { width: 100%; min-width: 400px; border-collapse: collapse; text-align: left; margin-bottom: 25px; }
         .grades-table th { background-color: #f8f9fa; color: #4e5d78; padding: 15px; font-weight: 600; border-bottom: 2px solid #1f3c6d; transition: background 0.3s, color 0.3s; }
-        .grades-table td { transition: color 0.3s; }
-        .no-grades-message { color: #8a94a6; font-style: italic; padding: 25px 0; }
-        .btn-extract { background-color: #1a73e8; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-left: 10px; display: inline-block; }
+        .grades-table td { padding: 15px; transition: color 0.3s; }
+        .no-grades-message { color: #8a94a6; font-style: italic; padding: 25px 0; text-align: center; }
+        .btn-extract { background-color: #1a73e8; color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-right: 10px; display: inline-block; }
 
         @media (max-width: 768px) {
             .navbar { padding: 0 15px; }
@@ -118,7 +118,7 @@
             .cards-grid, .bottom-grid { grid-template-columns: 1fr; gap: 15px; }
         }
 
-        /* 🌙 الوضع الليلي */
+        /* 🌙 Dark Mode */
         body.dark-mode { background-color: #0f172a; color: #e2e8f0; }
         body.dark-mode::before { opacity: 0.05; }
         body.dark-mode .navbar { background-color: rgba(30, 41, 59, 0.95); border-bottom-color: #334155; }
@@ -153,108 +153,108 @@
         <div class="logo">Mr.Sayed Araby</div>
         <div class="nav-content">
             <ul class="nav-menu">
-                <li class="menu-item"><div class="dropdown"><span class="dropbtn">الدروس والمحاضرات ▾</span><div class="dropdown-content"><a href="packages.html">بكديجات</a><a href="archive.html">أرشيف الدروس</a><a href="exams.html">امتحانات سابقة</a></div></div></li>
-                <li class="menu-item"><div class="dropdown"><span class="dropbtn">خلي بالك ▾</span><div class="dropdown-content"><a href="schedule.html">جدول المحاضرات</a><a href="instructions.html">التعليمات</a><a href="notifications.html">الإشعارات</a></div></div></li>
+                <li class="menu-item"><div class="dropdown"><span class="dropbtn">Lectures ▾</span><div class="dropdown-content"><a href="#">Packages</a><a href="#">Archive</a><a href="#">Previous Exams</a></div></div></li>
+                <li class="menu-item"><div class="dropdown"><span class="dropbtn">Important ▾</span><div class="dropdown-content"><a href="#">Schedule</a><a href="#">Instructions</a><a href="#">Notifications</a></div></div></li>
                 <li class="menu-item">
                     <div class="dropdown">
-                        <span class="dropbtn">خاص بي ▾</span>
+                        <span class="dropbtn">My Account ▾</span>
                         <div class="dropdown-content">
-                            <a href="profile.html">الملف الشخصي</a>
-                            <a href="settings.html">الإعدادات</a>
-                            <a href="history.html">سجل النشاط</a>
-                            <a href="#" id="installAppBtn" style="display: none; color: #0d9488; font-weight: bold; background-color: #f0fdfa;"><i class="fa-solid fa-mobile-screen"></i> تثبيت التطبيق</a>
+                            <a href="#">Profile</a>
+                            <a href="#">Settings</a>
+                            <a href="#">Activity Log</a>
+                            <a href="#" id="installAppBtn" style="display: none; color: #0d9488; font-weight: bold; background-color: #f0fdfa;"><i class="fa-solid fa-mobile-screen"></i> Install App</a>
                         </div>
                     </div>
                 </li>
-                <li class="menu-item"><div class="dropdown"><span class="dropbtn">اشتراكاتي ▾</span><div class="dropdown-content"><a href="recharge.html">شحن كود/كارت</a><a href="old-recharges.html">شحناتي القديمة</a><a href="subscribe-other.html">اشتراك مواد أخرى</a></div></div></li>
+                <li class="menu-item"><div class="dropdown"><span class="dropbtn">Subscriptions ▾</span><div class="dropdown-content"><a href="#">Recharge Code</a><a href="#">Old Recharges</a><a href="#">Other Subjects</a></div></div></li>
             </ul>
 
             <div class="top-icons">
-                <i class="fa-solid fa-globe" title="النسخة الإنجليزية" onclick="window.location.href='dashboard-en.html'"></i>
-                <i class="fa-solid fa-cart-shopping" title="سلة المشتريات" onclick="window.location.href='cart.html'"></i>
-                <i class="fa-solid fa-moon" id="darkModeToggle" title="الوضع الليلي" onclick="toggleDarkMode()"></i>
+                <i class="fa-solid fa-globe" title="Arabic Version" onclick="window.location.href='dashboard.html'"></i>
+                <i class="fa-solid fa-cart-shopping" title="Cart" onclick="window.location.href='cart.html'"></i>
+                <i class="fa-solid fa-moon" id="darkModeToggle" title="Dark Mode" onclick="toggleDarkMode()"></i>
             </div>
 
             <div class="profile-dropdown-container">
                 <div class="student-profile" onclick="toggleProfileMenu(event)">
                     <i class="fa-solid fa-chevron-down" style="font-size: 0.75rem; color: #64748b;"></i>
-                    <span class="student-name" id="nav-student-name">يوسف</span> <!-- هنا رجعناها الاسم بس -->
+                    <span class="student-name" id="nav-student-name">Student</span>
                     <div class="avatar-circle"><i class="fa-regular fa-user"></i></div>
                 </div>
                 
                 <div class="user-menu-dropdown" id="profileDropdown">
-                    <div class="user-code">كود الطالب : <span id="dropdown-code-display">----</span></div>
+                    <div class="user-code">Student Code : <span id="dropdown-code-display">----</span></div>
                     <hr class="user-divider">
-                    <div class="user-points">نقاطك الحالية : <span id="user-points-display">160</span></div>
+                    <div class="user-points">Current Points : <span id="user-points-display">160</span></div>
                     <hr class="user-divider">
                     <ul class="user-menu-links">
-                        <li><a href="lectures.html"><i class="fa-regular fa-gem"></i> <span>دروسي</span></a></li>
-                        <li><a href="schedule.html"><i class="fa-regular fa-calendar-days"></i> <span>مواعيد الحصص</span></a></li>
-                        <li><a href="recharge.html"><i class="fa-solid fa-wallet" style="opacity: 0.7;"></i> <span>شحن الحساب</span></a></li>
+                        <li><a href="#"><i class="fa-regular fa-gem"></i> <span>My Lectures</span></a></li>
+                        <li><a href="#"><i class="fa-regular fa-calendar-days"></i> <span>Timetable</span></a></li>
+                        <li><a href="#"><i class="fa-solid fa-wallet" style="opacity: 0.7;"></i> <span>Recharge Account</span></a></li>
                     </ul>
-                    <button class="btn-dropdown-logout" onclick="confirmLogout()">تسجيل خروج</button>
+                    <button class="btn-dropdown-logout" onclick="confirmLogout()">Logout</button>
                 </div>
             </div>
         </div>
     </header>
 
     <main class="main-container">
-        <h2 class="welcome-msg">مرحباً بك يا <span id="welcome-name" style="color: #fe9c38;">بطل</span> في لوحة تحكمك 👋</h2>
+        <h2 class="welcome-msg">Welcome, <span id="welcome-name" style="color: #fe9c38;">Hero</span>, to your dashboard 👋</h2>
         <div class="cards-grid">
             <div class="stat-card card-code">
                 <div class="stat-info">
                     <span class="stat-number" id="student-code-display">----</span>
-                    <span class="stat-label">كود الطالب داخل المنصة</span>
+                    <span class="stat-label">Your Platform Code</span>
                 </div>
                 <div class="icon-box icon-teal"><i class="fa-solid fa-id-card-clip"></i></div>
             </div>
             <div class="stat-card card-lectures" id="lectures-counter-card">
                 <div class="stat-info">
                     <span class="stat-number" id="live-video-count">...</span>
-                    <span class="stat-label">الدخول للمحاضرات</span>
+                    <span class="stat-label">Access Lectures</span>
                 </div>
                 <div class="icon-box icon-orange"><i class="fa-solid fa-book-open"></i></div>
             </div>
             <div class="stat-card card-link">
                 <div class="stat-info">
-                    <span class="stat-label" style="display: block; margin-bottom: 5px;">الرابط الثابت لتقرير امتحاناتك:</span>
+                    <span class="stat-label" style="display: block; margin-bottom: 5px;">Your permanent exam report link:</span>
                     <div class="link-container">
-                        <button class="btn-copy" onclick="copyExamLink()">نسخ الرابط</button>
                         <input type="text" class="link-input" id="exam-link" value="" readonly>
+                        <button class="btn-copy" onclick="copyExamLink()">Copy Link</button>
                     </div>
                 </div>
             </div>
         </div>
-        <a href="certificate.html" class="btn-certificate">
-            <i class="fa-solid fa-award"></i> استخراج شهادة التفوق التلقائية
+        <a href="#" class="btn-certificate">
+            <i class="fa-solid fa-award"></i> Generate Excellence Certificate
         </a>
         <div class="bottom-grid">
             <div class="section-box todo-box">
                 <div class="todo-header">To Do List</div>
                 <div class="todo-input-row">
-                    <button class="btn-add-todo" onclick="addTodoItem()">إضافة</button>
-                    <input type="text" id="todo-input" placeholder="عايز أذاكر النهارده...">
+                    <input type="text" id="todo-input" placeholder="I want to study today...">
+                    <button class="btn-add-todo" onclick="addTodoItem()">Add</button>
                 </div>
                 <ul class="todo-list" id="todo-list-container"></ul>
             </div>
             <div class="section-box qr-download-box">
                 <button class="btn-qr-download btn-qr-red" onclick="downloadLiveQR('personal')">
-                    <i class="fa-solid fa-file-arrow-down"></i> تحميل QR معلوماتي
+                    <i class="fa-solid fa-file-arrow-down"></i> Download Info QR
                 </button>
                 <button class="btn-qr-download btn-qr-cyan" onclick="downloadLiveQR('login')">
-                    <i class="fa-solid fa-file-arrow-down"></i> تحميل QR تسجيل الدخول
+                    <i class="fa-solid fa-file-arrow-down"></i> Download Login QR
                 </button>
             </div>
         </div>
         <div id="hidden-qrcode"></div>
         <div class="grades-container">
-            <div class="grades-header">درجات الامتحانات والواجبات</div>
+            <div class="grades-header">Exams and Assignments Grades</div>
             <table class="grades-table">
-                <thead><tr><th>الامتحان</th><th>الدرجة - النسبة المئوية</th></tr></thead>
-                <tbody id="grades-rows"><tr><td colspan="2" class="no-grades-message">لا توجد امتحانات مسجلة.</td></tr></tbody>
+                <thead><tr><th>Exam</th><th>Grade - Percentage</th></tr></thead>
+                <tbody id="grades-rows"><tr><td colspan="2" class="no-grades-message">No exams recorded.</td></tr></tbody>
             </table>
-            <button class="btn-extract" onclick="alert('لا توجد بيانات حالياً!')">استخراج الامتحانات</button>
-            <button class="btn-extract" style="background-color: #0d6efd;" onclick="alert('لا توجد بيانات حالياً!')">استخراج الواجبات</button>
+            <button class="btn-extract" onclick="alert('No data available currently!')">Extract Exams</button>
+            <button class="btn-extract" style="background-color: #0d6efd;" onclick="alert('No data available currently!')">Extract Assignments</button>
         </div>
     </main>
 
@@ -272,7 +272,7 @@
             else { icon.classList.remove("fa-sun"); icon.classList.add("fa-moon"); icon.style.color = ""; }
         }
 
-        function confirmLogout() { if(confirm("هل أنت متأكد من تسجيل الخروج؟")) { localStorage.removeItem('savedCode'); window.location.href = 'index.html'; } }
+        function confirmLogout() { if(confirm("Are you sure you want to logout?")) { localStorage.removeItem('savedCode'); window.location.href = 'index.html'; } }
 
         const firebaseConfig = { databaseURL: "https://mr-sayed-al-araby-default-rtdb.firebaseio.com" };
         firebase.initializeApp(firebaseConfig);
@@ -290,11 +290,11 @@
         window.onload = function() {
             if (localStorage.getItem("theme") === "dark") { document.body.classList.add("dark-mode"); const icon = document.getElementById("darkModeToggle"); icon.classList.remove("fa-moon"); icon.classList.add("fa-sun"); icon.style.color = "#fe9c38"; }
 
-            const savedName = localStorage.getItem('savedName') || "يوسف";
+            const savedName = localStorage.getItem('savedName') || "Yousef";
             const savedCode = localStorage.getItem('savedCode') || "6050";
             const savedPoints = localStorage.getItem('studentPoints') || "160";
             
-            document.getElementById('nav-student-name').innerText = savedName; // رجعناه يعرض الاسم بس
+            document.getElementById('nav-student-name').innerText = savedName; 
             document.getElementById('welcome-name').innerText = savedName.split(' ')[0];
             document.getElementById('user-points-display').innerText = savedPoints;
             document.getElementById('student-code-display').innerText = savedCode;
@@ -307,12 +307,11 @@
             
             database.ref('active_students/' + savedCode).set({ name: savedName, stage: studentStage, code: savedCode, lastSeen: firebase.database.ServerValue.TIMESTAMP });
         }
-        function downloadLiveQR(type) { /* ... نفس الكود ... */ }
-        function copyExamLink() { const linkInput = document.getElementById('exam-link'); linkInput.select(); navigator.clipboard.writeText(linkInput.value); alert("تم النسخ!"); }
+        function downloadLiveQR(type) { /* QR Logic */ }
+        function copyExamLink() { const linkInput = document.getElementById('exam-link'); linkInput.select(); navigator.clipboard.writeText(linkInput.value); alert("Copied!"); }
         function addTodoItem() { const input = document.getElementById('todo-input'); if (!input.value.trim()) return; let todos = JSON.parse(localStorage.getItem('studentTodos')) || []; todos.push(input.value.trim()); localStorage.setItem('studentTodos', JSON.stringify(todos)); input.value = ''; loadTodos(); }
         function loadTodos() { const container = document.getElementById('todo-list-container'); container.innerHTML = ''; let todos = JSON.parse(localStorage.getItem('studentTodos')) || []; todos.forEach((todo, index) => { container.innerHTML += `<li class="todo-item"><span>${todo}</span><button class="btn-delete-todo" onclick="deleteTodoItem(${index})"><i class="fa-solid fa-trash-can"></i></button></li>`; }); }
         function deleteTodoItem(index) { let todos = JSON.parse(localStorage.getItem('studentTodos')) || []; todos.splice(index, 1); localStorage.setItem('studentTodos', JSON.stringify(todos)); loadTodos(); }
-        document.getElementById('lectures-counter-card').onclick = () => window.location.href = "lectures.html";
     </script>
 </body>
 </html>
