@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>أرشيف الدروس - منصة مستر سيد العربي</title>
+    <title>جدول المحاضرات - منصة مستر سيد العربي</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -29,13 +29,19 @@
         .page-header h2 i { color: #2b7a78; }
         .page-header p { color: #64748b; font-size: 1rem; }
 
-        /* حالة لو الأرشيف فارغ */
-        .empty-state { text-align: center; padding: 60px 20px; background: #fff; border-radius: 12px; border: 2px dashed #cbd5e1; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
-        .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        /* صندوق الجدول (الفارغ بياقة) */
+        .schedule-box { background: #fff; border-radius: 12px; padding: 40px 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #eef0f3; text-align: center; }
         
-        .empty-state h3 { color: #1a2536; font-size: 1.3rem; margin-bottom: 10px; }
-        .empty-state p { color: #64748b; font-weight: 500; font-size: 1rem; line-height: 1.6; max-width: 500px; margin: 0 auto; }
+        /* تصميم النتيجة (التقويم) الوهمية */
+        .calendar-icon-wrapper { position: relative; width: 100px; height: 100px; margin: 0 auto 20px; }
+        .calendar-icon-wrapper i { font-size: 5rem; color: #2b7a78; opacity: 0.2; }
+        .calendar-date { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; font-weight: bold; color: #fe9c38; }
+
+        .schedule-box h3 { color: #1a2536; font-size: 1.4rem; margin-bottom: 15px; }
+        .schedule-box p { color: #64748b; font-weight: 500; font-size: 1rem; line-height: 1.6; max-width: 500px; margin: 0 auto 25px; }
+        
+        /* تعليمات سريعة تحت الجدول */
+        .info-alert { background-color: #f0fdfa; border-right: 4px solid #0d9488; color: #0f766e; padding: 15px; border-radius: 8px; font-size: 0.95rem; text-align: right; max-width: 600px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
 
         /* 🛡️ درع الحماية */
         body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
@@ -52,15 +58,23 @@
     <!-- المحتوى -->
     <main class="main-container">
         <div class="page-header">
-            <h2><i class="fa-solid fa-box-archive"></i> أرشيف الدروس السابقة</h2>
-            <p>راجع المحاضرات والدروس التي تم إنهاؤها مسبقاً.</p>
+            <h2><i class="fa-regular fa-calendar-check"></i> جدول المحاضرات</h2>
+            <p>تابع مواعيد نزول الدروس والامتحانات الخاصة بمرحلتك الدراسية.</p>
         </div>
 
-        <!-- رسالة عدم وجود أرشيف حالياً -->
-        <div class="empty-state">
-            <i class="fa-solid fa-folder-open"></i>
-            <h3>الأرشيف فارغ حالياً</h3>
-            <p>لا توجد محاضرات أرشيفية مضافة حتى الآن. سيتم نقل الدروس المنتهية إلى هنا تباعاً ليتمكن الطلاب من مراجعتها في أي وقت.</p>
+        <div class="schedule-box">
+            <div class="calendar-icon-wrapper">
+                <i class="fa-regular fa-calendar"></i>
+                <div class="calendar-date">؟</div>
+            </div>
+            
+            <h3>جاري تنسيق المواعيد</h3>
+            <p>يتم حالياً إعداد جدول المحاضرات الخاص بك. سيتم إرسال إشعار لك فور اعتماد المواعيد الرسمية لنزول المحاضرات والامتحانات.</p>
+
+            <div class="info-alert">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>تأكد من تفعيل الإشعارات في صفحة (الإعدادات) ليصلك كل جديد.</span>
+            </div>
         </div>
     </main>
 

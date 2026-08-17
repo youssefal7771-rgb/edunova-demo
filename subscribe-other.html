@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>أرشيف الدروس - منصة مستر سيد العربي</title>
+    <title>اشتراك مواد أخرى - منصة مستر سيد العربي</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -24,19 +24,19 @@
         /* حاوية المحتوى */
         .main-container { margin-top: 100px; padding: 0 20px; max-width: 800px; margin-left: auto; margin-right: auto; }
         
-        .page-header { text-align: center; margin-bottom: 40px; }
+        .page-header { text-align: center; margin-bottom: 30px; }
         .page-header h2 { font-size: 1.8rem; color: #1a2536; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .page-header h2 i { color: #2b7a78; }
         .page-header p { color: #64748b; font-size: 1rem; }
 
-        /* حالة لو الأرشيف فارغ */
+        /* حالة لو مفيش مواد تانية (فارغ) */
         .empty-state { text-align: center; padding: 60px 20px; background: #fff; border-radius: 12px; border: 2px dashed #cbd5e1; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
         .empty-state i { font-size: 4rem; color: #cbd5e1; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
         
         .empty-state h3 { color: #1a2536; font-size: 1.3rem; margin-bottom: 10px; }
         .empty-state p { color: #64748b; font-weight: 500; font-size: 1rem; line-height: 1.6; max-width: 500px; margin: 0 auto; }
-
+        
         /* 🛡️ درع الحماية */
         body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
     </style>
@@ -52,15 +52,15 @@
     <!-- المحتوى -->
     <main class="main-container">
         <div class="page-header">
-            <h2><i class="fa-solid fa-box-archive"></i> أرشيف الدروس السابقة</h2>
-            <p>راجع المحاضرات والدروس التي تم إنهاؤها مسبقاً.</p>
+            <h2><i class="fa-solid fa-layer-group"></i> اشتراك مواد أخرى</h2>
+            <p>تصفح واشترك في المواد الدراسية الأخرى المتاحة على منصتنا.</p>
         </div>
 
-        <!-- رسالة عدم وجود أرشيف حالياً -->
+        <!-- رسالة عدم وجود مواد حالياً -->
         <div class="empty-state">
-            <i class="fa-solid fa-folder-open"></i>
-            <h3>الأرشيف فارغ حالياً</h3>
-            <p>لا توجد محاضرات أرشيفية مضافة حتى الآن. سيتم نقل الدروس المنتهية إلى هنا تباعاً ليتمكن الطلاب من مراجعتها في أي وقت.</p>
+            <i class="fa-solid fa-book-journal-whills"></i>
+            <h3>لا توجد مواد أخرى متاحة حالياً</h3>
+            <p>نعمل على التعاقد مع نخبة من أفضل المدرسين في المواد الأخرى. سيتم الإعلان هنا فور توفر مواد جديدة يمكنك الاشتراك بها.</p>
         </div>
     </main>
 

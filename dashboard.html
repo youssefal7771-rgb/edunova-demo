@@ -22,10 +22,34 @@
         .navbar .logo { font-size: 1.3rem; font-weight: 800; color: #1f3c6d; }
         .nav-content { display: flex; align-items: center; gap: 25px; }
         .nav-menu { display: flex; list-style: none; gap: 20px; }
-        .menu-item { position: relative; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #4e5d78; padding: 10px 5px; }
-        .dropdown-content { display: none; position: absolute; background-color: #fff; min-width: 160px; box-shadow: 0px 8px 16px rgba(0,0,0,0.1); border-radius: 8px; z-index: 1001; top: 100%; right: 0; margin-top: 10px; overflow: hidden; }
-        .dropdown-content a { color: #4e5d78; padding: 12px 16px; text-decoration: none; display: block; }
-        .dropdown:hover .dropdown-content { display: block; }
+        
+        /* 🛠️ التعديل السحري للقوائم المنسدلة */
+        .menu-item { position: relative; cursor: pointer; font-size: 0.95rem; font-weight: 600; color: #4e5d78; padding: 25px 5px; /* زودنا البادينج عشان الماوس ميقعش */ }
+        .dropdown { position: relative; }
+        .dropdown-content { 
+            visibility: hidden; /* بدل display: none عشان تبقى ناعمة */
+            opacity: 0;
+            position: absolute; 
+            background-color: #fff; 
+            min-width: 180px; 
+            box-shadow: 0px 10px 20px rgba(0,0,0,0.1); 
+            border-radius: 8px; 
+            z-index: 1001; 
+            top: 100%; 
+            right: 0; 
+            /* شيلنا margin-top اللي كان بيفصلهم */
+            transform: translateY(10px); /* حركة ناعمة من تحت لفوق */
+            transition: all 0.3s ease; 
+            border: 1px solid #eef0f3;
+        }
+        .dropdown-content a { color: #4e5d78; padding: 12px 16px; text-decoration: none; display: block; border-bottom: 1px solid #f8f9fa; transition: background 0.3s; }
+        .dropdown-content a:hover { background-color: #f1f4f9; color: #2b7a78; padding-right: 20px; /* حركة شيك لما تقف على اللينك */ }
+        .dropdown-content a:last-child { border-bottom: none; }
+        .menu-item:hover .dropdown-content { 
+            visibility: visible; 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
         
         .student-profile { background-color: #f1f4f9; padding: 8px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #e1e6ef; }
         .student-name { font-size: 0.9rem; font-weight: bold; color: #1a2536; white-space: nowrap; }
@@ -82,7 +106,7 @@
         @media (max-width: 768px) {
             .navbar { padding: 0 15px; }
             .navbar .logo { font-size: 1.1rem; }
-            .nav-menu { display: none; }
+            .nav-menu { display: none; } /* القوائم بتختفي على الموبايل عشان الشاشة صغيرة */
             .student-profile { padding: 5px 10px; }
             .student-name { font-size: 0.8rem; }
             .avatar-circle { width: 28px; height: 28px; }
@@ -99,20 +123,9 @@
             .grades-container { padding: 20px 15px; }
         }
 
-        /* 🛡️ درع الحماية: منع تحديد النصوص والصور */
-        body {
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
-            -webkit-user-drag: none;
-        }
-        input, textarea, select {
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-            user-select: text;
-        }
+        /* 🛡️ درع الحماية */
+        body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-user-drag: none; }
+        input, textarea, select { -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
     </style>
 </head>
 <body>
@@ -129,7 +142,6 @@
                             <a href="profile.html">الملف الشخصي</a>
                             <a href="settings.html">الإعدادات</a>
                             <a href="history.html">سجل النشاط</a>
-                            <!-- زرار التثبيت المخفي (بيظهر فقط لو متاح وبيبقى جوه القائمة دي) -->
                             <a href="#" id="installAppBtn" style="display: none; color: #0d9488; font-weight: bold; background-color: #f0fdfa;"><i class="fa-solid fa-mobile-screen"></i> تثبيت التطبيق</a>
                         </div>
                     </div>
@@ -228,7 +240,6 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // الزرار هيظهر جوه القائمة المنسدلة فقط
             installBtn.style.display = 'block';
         });
 

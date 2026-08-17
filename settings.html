@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>الإعدادات - منصة مستر سيد العربي</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> <!-- مكتبة الرسائل المنبثقة الشيك -->
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #ebf1fa; color: #333; min-height: 100vh; padding-bottom: 50px; }
+        
+        /* خلفية المنصة */
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.1; background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="80" height="80"><text y="25" x="10" font-family="FontAwesome" font-size="12" fill="%232b7a78">⚛</text><text y="30" x="60" font-family="FontAwesome" font-size="10" fill="%23fe9c38">🧪</text></svg>'); background-repeat: repeat; animation: bgMove 20s linear infinite; }
+        @keyframes bgMove { 0% { background-position: 0 0; } 100% { background-position: 80px 80px; } }
+
+        /* الشريط العلوي */
+        .navbar { background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); height: 70px; padding: 0 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.02); border-bottom: 1px solid #eef0f3; position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; }
+        .navbar .logo { font-size: 1.3rem; font-weight: 800; color: #1f3c6d; }
+        .btn-back-nav { background: #f1f4f9; color: #1f3c6d; text-decoration: none; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+        .btn-back-nav:hover { background: #e2e8f0; }
+
+        /* حاوية المحتوى */
+        .main-container { margin-top: 100px; padding: 0 20px; max-width: 600px; margin-left: auto; margin-right: auto; }
+        
+        .page-header { text-align: center; margin-bottom: 30px; }
+        .page-header h2 { font-size: 1.8rem; color: #1a2536; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .page-header h2 i { color: #2b7a78; }
+        .page-header p { color: #64748b; font-size: 1rem; }
+
+        /* صندوق الإعدادات */
+        .settings-box { background: #fff; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #eef0f3; margin-bottom: 20px; }
+        .settings-title { font-size: 1.1rem; color: #1f3c6d; font-weight: bold; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #f1f4f9; display: flex; align-items: center; gap: 10px; }
+
+        /* صف الإعداد (Toggle) */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .setting-info h4 { font-size: 1rem; color: #1a2536; margin-bottom: 3px; }
+        .setting-info p { font-size: 0.85rem; color: #64748b; }
+        
+        /* زرار الـ Switch (Toggle) */
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2b7a78; }
+        input:checked + .slider:before { transform: translateX(24px); }
+
+        /* تغيير كلمة السر */
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; font-size: 0.9rem; font-weight: bold; color: #4e5d78; margin-bottom: 8px; }
+        .input-group input { width: 100%; padding: 12px 15px; border: 1.5px solid #eef0f3; border-radius: 8px; outline: none; transition: 0.3s; background: #fcfdfe; }
+        .input-group input:focus { border-color: #2b7a78; background: #fff; }
+
+        /* زر الحفظ */
+        .btn-save { width: 100%; padding: 14px; background: linear-gradient(90deg, #2b7a78, #4cb5ab); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; display: flex; justify-content: center; gap: 10px; align-items: center; }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(43, 122, 120, 0.3); }
+
+        /* زر تسجيل الخروج */
+        .btn-logout { width: 100%; padding: 14px; background: transparent; color: #e53935; border: 2px solid #e53935; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 15px; display: flex; justify-content: center; gap: 10px; align-items: center; }
+        .btn-logout:hover { background: #e53935; color: white; }
+
+        /* 🛡️ درع الحماية */
+        body { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+        input { -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; user-select: text; }
+    </style>
+</head>
+<body>
+
+    <!-- الشريط العلوي -->
+    <header class="navbar">
+        <div class="logo">Mr.Sayed Araby</div>
+        <a href="dashboard.html" class="btn-back-nav"><i class="fa-solid fa-arrow-left"></i> رجوع</a>
+    </header>
+
+    <!-- المحتوى -->
+    <main class="main-container">
+        <div class="page-header">
+            <h2><i class="fa-solid fa-gear"></i> إعدادات الحساب</h2>
+            <p>تحكم في تفضيلات حسابك والأمان بكل سهولة.</p>
+        </div>
+
+        <!-- إعدادات عامة -->
+        <div class="settings-box">
+            <div class="settings-title"><i class="fa-solid fa-sliders"></i> تفضيلات المنصة</div>
+            
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h4>إشعارات المنصة</h4>
+                    <p>تلقي تنبيهات عند نزول محاضرات أو امتحانات جديدة.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" checked id="notif-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h4>إرسال تقرير لولي الأمر</h4>
+                    <p>إرسال درجات الامتحانات والغياب لرقم ولي الأمر.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" checked id="parent-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="setting-row">
+                <div class="setting-info">
+                    <h4>الوضع الليلي (قريباً)</h4>
+                    <p>تحويل المنصة للون الداكن لإراحة العين.</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" disabled>
+                    <span class="slider" style="background-color: #e2e8f0; cursor: not-allowed;"></span>
+                </label>
+            </div>
+        </div>
+
+        <!-- إعدادات الأمان -->
+        <div class="settings-box">
+            <div class="settings-title"><i class="fa-solid fa-shield-halved"></i> الأمان وكلمة المرور</div>
+            
+            <div class="input-group">
+                <label>كلمة المرور الحالية</label>
+                <input type="password" placeholder="أدخل كلمة المرور القديمة">
+            </div>
+            <div class="input-group">
+                <label>كلمة المرور الجديدة</label>
+                <input type="password" placeholder="أدخل كلمة المرور الجديدة">
+            </div>
+            <div class="input-group">
+                <label>تأكيد كلمة المرور</label>
+                <input type="password" placeholder="أعد كتابة كلمة المرور الجديدة">
+            </div>
+        </div>
+
+        <!-- أزرار التحكم -->
+        <button class="btn-save" onclick="saveSettings()"><i class="fa-solid fa-floppy-disk"></i> حفظ التعديلات</button>
+        <button class="btn-logout" onclick="confirmLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> تسجيل الخروج من كل الأجهزة</button>
+    </main>
+
+    <!-- سكربت التفاعل -->
+    <script>
+        function saveSettings() {
+            // استخدام مكتبة SweetAlert لرسالة احترافية
+            Swal.fire({
+                icon: 'success',
+                title: 'تم الحفظ!',
+                text: 'تم تحديث إعدادات حسابك بنجاح.',
+                confirmButtonColor: '#2b7a78',
+                confirmButtonText: 'حسناً'
+            });
+        }
+
+        function confirmLogout() {
+            Swal.fire({
+                title: 'هل أنت متأكد؟',
+                text: "سيتم تسجيل خروجك من المنصة نهائياً",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e53935',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'نعم، تسجيل الخروج',
+                cancelButtonText: 'إلغاء'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // مسح بيانات الدخول الوهمية وتحويله للرئيسية
+                    localStorage.removeItem('savedCode');
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+    </script>
+
+    <!-- 🛡️ سكريبت الحماية -->
+    <script>
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault(); return false;
+            }
+        });
+    </script>
+</body>
+</html>
