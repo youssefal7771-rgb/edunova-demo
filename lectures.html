@@ -53,19 +53,40 @@
         .video-player-container { display: none; position: relative; width: 100%; background: #000; border-radius: 15px; overflow: hidden; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .vid-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-25deg); color: rgba(255, 255, 255, 0.3); font-size: 3vw; font-weight: 900; pointer-events: none; white-space: nowrap; user-select: none; z-index: 100; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
         
-        /* 🛡️ درع حماية اليوتيوب (تم النقل للأسفل وتغطية شريط التحكم والمقترحات) */
+        /* 🛡️ درع حماية اليوتيوب (لوح زجاجي يغطي الفيديو بالكامل عدا خط الوقت) */
         .yt-protection-shield {
             position: absolute;
-            bottom: 0;
+            top: 0;
             left: 0;
             width: 100%;
-            height: 90px; /* الارتفاع ده كافي جداً لتغطية اللوجو وزرار More Videos والشريط */
-            background: rgba(15, 23, 42, 0.2); /* تغميق خفيف */
-            backdrop-filter: blur(12px); /* تمويه قوي */
-            -webkit-backdrop-filter: blur(12px);
+            height: calc(100% - 55px); /* يسيب آخر 55 بيكسل تحت براحته للتقديم والتأخير */
+            background: transparent; /* شفاف عشان يشوف الشرح، بس بيمنع الضغط */
             z-index: 50;
-            cursor: not-allowed;
+            cursor: default;
         }
+
+        /* 🔘 زرار تكبير الشاشة الخاص بمنصتنا */
+        .btn-custom-fullscreen {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 60;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        .btn-custom-fullscreen:hover { background: #655ecc; }
 
         /* Interactive Notebook box */
         .notebook-box { background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; margin-top: 20px; transition: 0.3s; }
@@ -89,7 +110,7 @@
         .no-data-msg h3 { color: #2b303a; font-size: 1.3rem; margin-bottom: 10px; transition: 0.3s; }
         .no-data-msg p { color: #7a828e; font-size: 1rem; line-height: 1.5; transition: 0.3s; }
         
-        /* 🌙 الوضع الليلي (Dark Mode) */
+        /* 🌙 الوضع الليلي */
         body.dark-mode { background-color: #0f172a; color: #e2e8f0; }
         body.dark-mode .header-section, body.dark-mode .lesson-main-card, body.dark-mode .video-section-box, body.dark-mode .tool-card-box, body.dark-mode .no-data-msg, body.dark-mode .notebook-box { background-color: #1e293b; border-color: #334155; }
         body.dark-mode .lesson-header-bar { background-color: #0f172a; border-bottom: 1px solid #334155; }
@@ -113,7 +134,6 @@
             .btn-toggle-content { width: 100%; justify-content: center; }
             .status-banner { flex-direction: column; }
             .status-banner a { margin-right: 0; margin-top: 5px; width: 100%; text-align: center; }
-            .vid-watermark { font-size: 5vw; }
         }
     </style>
 </head>
@@ -138,7 +158,7 @@
     </div>
 
     <script>
-        // 🌙 تشغيل الوضع الليلي تلقائياً
+        // 🌙 تشغيل الوضع الليلي
         window.addEventListener('load', function() {
             if (localStorage.getItem("theme") === "dark") {
                 document.body.classList.add("dark-mode");
@@ -157,12 +177,12 @@
 
         if (!studentCode) { window.location.href = 'login.html'; }
 
-        // 🚀 الاستماع للداتابيز وتأمين الـ VIP
+        // تأمين وتحديث حالة الـ VIP
         database.ref('students/' + studentCode).on('value', (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.val();
                 if (data.deviceID && data.deviceID !== myDeviceID) {
-                    alert("تم فك ارتباط هذا الجهاز بحسابك! يرجى تسجيل الدخول مجدداً أو مراجعة المستر.");
+                    alert("تم فك ارتباط هذا الجهاز بحسابك! يرجى تسجيل الدخول مجدداً.");
                     window.location.href = 'login.html';
                 }
                 if (data.currentSession && data.currentSession !== mySession) {
@@ -170,7 +190,6 @@
                     window.location.href = 'login.html';
                 }
                 
-                // هنا بنأكد إن الطالب مياخدش الـ VIP إلا لو في الداتابيز active بجد
                 const currentVipStatus = (data.subscriptionStatus === 'active');
                 if (isStudentVip !== currentVipStatus) {
                     isStudentVip = currentVipStatus;
@@ -178,7 +197,6 @@
                     renderCombinedVideos(); 
                 }
             } else {
-                // لو الطالب لسه جديد وملوش بيانات، بيتقفل عليه الأوتوماتيك ومياخدش VIP
                 if (isStudentVip !== false) {
                     isStudentVip = false;
                     updateStatusBanner();
@@ -218,10 +236,7 @@
                 let counter = 1;
                 keys.forEach(key => {
                     const block = combinedData[key];
-                    
-                    let watchHtml = '';
-                    let examHtml = '';
-                    let hwHtml = '';
+                    let watchHtml = ''; let examHtml = ''; let hwHtml = '';
 
                     if (isStudentVip) {
                         watchHtml = `<button onclick="openVideoPlayer('${key}', '${escapeHTML(block.url)}')" class="btn-watch-green">مشاهدة <i class="fa-solid fa-circle-play"></i></button>`;
@@ -259,13 +274,10 @@
                                     <div class="video-meta-right"><span>${escapeHTML(block.title)}</span><i class="fa-solid fa-circle-play icon-play-small"></i></div>
                                 </div>
                                 
-                                <!-- 🎥 مشغل الفيديو -->
                                 <div class="video-player-container" id="player-container-${key}">
-                                    <div class="vid-watermark">${savedName} - ${studentCode}</div>
-                                    <div id="video-wrapper-${key}" style="width: 100%; min-height: 350px;"></div>
+                                    <div id="video-wrapper-${key}" style="width: 100%; min-height: 450px;"></div>
                                 </div>
 
-                                <!-- 📒 الكراسة التفاعلية -->
                                 <div class="notebook-box">
                                     <h4 class="notebook-title"><i class="fa-solid fa-comments"></i> الكراسة التفاعلية للمحاضرة</h4>
                                     <div id="comments-list-${key}" class="comments-list-box">
@@ -330,6 +342,23 @@
             }
         }
 
+        // 🚀 دالة تكبير الشاشة المخصصة (عشان درع الحماية يكبر معاها)
+        function toggleFullScreen(elemId, btnId) {
+            let elem = document.getElementById(elemId);
+            let btn = document.getElementById(btnId);
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) { elem.requestFullscreen(); }
+                else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); }
+                else if (elem.msRequestFullscreen) { elem.msRequestFullscreen(); }
+                btn.innerHTML = '<i class="fa-solid fa-compress"></i> تصغير الشاشة';
+            } else {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+                else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+                else if (document.msExitFullscreen) { document.msExitFullscreen(); }
+                btn.innerHTML = '<i class="fa-solid fa-expand"></i> تكبير الشاشة';
+            }
+        }
+
         function openVideoPlayer(key, url) {
             const container = document.getElementById(`player-container-${key}`);
             const wrapper = document.getElementById(`video-wrapper-${key}`);
@@ -340,34 +369,43 @@
                 return;
             }
             
-            document.querySelectorAll('.video-player-container').forEach(c => {
-                c.style.display = 'none';
-            });
+            document.querySelectorAll('.video-player-container').forEach(c => { c.style.display = 'none'; });
             document.querySelectorAll('[id^="video-wrapper-"]').forEach(w => w.innerHTML = '');
-
             container.style.display = "block";
 
             let embedHtml = '';
 
+            // 🔥 هنا درع الحماية وزرار التكبير بتاعنا
             if (url.includes('youtube.com') || url.includes('youtu.be')) {
                 let videoId = '';
                 if (url.includes('youtu.be/')) videoId = url.split('youtu.be/')[1].split('?')[0];
                 else if (url.includes('v=')) videoId = url.split('v=')[1].split('&')[0];
                 
-                // 🚀 هنا ضفت درع الحماية تحت عشان يقفل شريط التحكم واقتراحات يوتيوب
                 embedHtml = `
-                    <div style="position: relative; width: 100%; height: 450px; border-radius: 15px; overflow: hidden;">
-                        <div class="yt-protection-shield" title="شريط التحكم محمي"></div>
-                        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    <div id="fs-wrapper-${key}" style="position: relative; width: 100%; height: 100%; border-radius: 15px; overflow: hidden; background: #000;">
+                        
+                        <!-- 🛡️ درع الحماية الزجاجي -->
+                        <div class="yt-protection-shield" title="هذا الجزء محمي"></div>
+                        
+                        <!-- 🔘 زرار التكبير بتاعنا -->
+                        <button onclick="toggleFullScreen('fs-wrapper-${key}', 'fs-btn-${key}')" id="fs-btn-${key}" class="btn-custom-fullscreen">
+                            <i class="fa-solid fa-expand"></i> تكبير الشاشة
+                        </button>
+                        
+                        <!-- العلامة المائية -->
+                        <div class="vid-watermark">${savedName} - ${studentCode}</div>
+                        
+                        <!-- ❌ لاحظ إني ضفت fs=0 عشان ألغي زرار يوتيوب الأصلي للتكبير -->
+                        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&fs=0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
                     </div>`;
             } 
             else if (url.includes('drive.google.com')) {
                 let driveUrl = url.replace('/view', '/preview');
-                embedHtml = `<iframe src="${driveUrl}" width="100%" height="450" allow="autoplay" style="border:none; border-radius:15px;"></iframe>`;
+                embedHtml = `<iframe src="${driveUrl}" width="100%" height="100%" allow="autoplay" style="border:none; border-radius:15px;"></iframe>`;
             } 
             else {
                 embedHtml = `
-                    <video id="video-tag-${key}" controls controlsList="nodownload" oncontextmenu="return false;" autoplay style="width: 100%; max-height: 500px; border-radius: 15px; outline: none;">
+                    <video id="video-tag-${key}" controls controlsList="nodownload" oncontextmenu="return false;" autoplay style="width: 100%; height: 100%; border-radius: 15px; outline: none;">
                         <source src="${url}" type="video/mp4">
                         متصفحك لا يدعم تشغيل الفيديو.
                     </video>`;
@@ -383,20 +421,14 @@
             }, 3000);
         }
 
+        // 💬 دوال الكراسة التفاعلية
         function addComment(videoKey) {
             const inputField = document.getElementById(`comment-input-${videoKey}`);
             const text = inputField.value.trim();
             if(!text) return;
 
-            const commentData = {
-                senderName: savedName,
-                text: text,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            database.ref(`interactive_notebook/${videoKey}`).push(commentData).then(() => {
-                inputField.value = ''; 
-            });
+            const commentData = { senderName: savedName, text: text, timestamp: firebase.database.ServerValue.TIMESTAMP };
+            database.ref(`interactive_notebook/${videoKey}`).push(commentData).then(() => { inputField.value = ''; });
         }
 
         function loadComments(videoKey) {
